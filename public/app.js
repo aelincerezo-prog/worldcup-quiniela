@@ -159,7 +159,95 @@ function toggleMenu() {
 // HOME VIEW
 // ═══════════════════════════════════════════════════════
 async function renderHome() {
-  await Promise.all([loadRanking(), loadMatchesAndPhases()]);
+  await Promise.all([loadRanking(), loadActivePhase(), loadHomePrizes()]);
+}
+
+async function loadActivePhase() {
+  try {
+    const [{ matches }, { phases }] = await Promise.all([api('/matches'), api('/phases')]);
+    allMatches = matches;
+    allPhases  = phases;
+    const active = phases.find(p => p.is_active);
+    const el     = document.getElementById('active-phase-matches');
+    const title  = document.getElementById('active-phase-title');
+    if (!active) {
+      title.textContent = '📅 Fase Actual';
+      el.innerHTML = '<div class="empty-state"><span class="empty-state-icon">⏳</span>Ninguna fase activa en este momento</div>';
+      return;
+    }
+    title.textContent = `📅 ${active.display_name}`;
+    const phaseMatches = matches.filter(m => m.phase_id === active.id);
+    if (!phaseMatches.length) {
+      el.innerHTML = '<div class="empty-state"><span class="empty-state-icon">📭</span>No hay partidos en esta fase aún</div>';
+      return;
+    }
+    const hasGroups = phaseMatches.some(m => m.group_name);
+    if (hasGroups) {
+      const byGroup = {};
+      for (const m of phaseMatches) (byGroup[m.group_name || 'Otros'] = byGroup[m.group_name || 'Otros'] || []).push(m);
+      el.innerHTML = Object.entries(byGroup).map(([g, ms]) => `
+        <div style="grid-column:1/-1">
+          <div class="group-header">Grupo ${g}</div>
+          <div class="matches-grid" style="margin:0">${ms.map(m => homeMatchCard(m, active)).join('')}</div>
+        </div>`).join('');
+    } else {
+      el.innerHTML = phaseMatches.map(m => homeMatchCard(m, active)).join('');
+    }
+  } catch {
+    document.getElementById('active-phase-matches').innerHTML = '<p class="loading-text">Error cargando partidos</p>';
+  }
+}
+
+function homeMatchCard(m, phase) {
+  const status  = matchStatus(m, phase);
+  const dateStr = formatDate(m.match_date);
+  let scoreSection;
+  if (m.is_finished) {
+    scoreSection = `<div class="match-result">
+      <span class="result-score">${m.home_score}</span>
+      <span class="match-vs">—</span>
+      <span class="result-score">${m.away_score}</span>
+    </div>`;
+  } else {
+    scoreSection = `<p class="match-badge ${badgeClass(status)}" style="text-align:center;margin-top:.5rem">${badgeLabel(status)}</p>
+      ${status === 'open' ? `<p class="deadline-ok" style="text-align:center">${deadlineLabel(m.match_date)}</p>` : ''}`;
+  }
+  return `<div class="match-card ${m.is_finished ? 'finished' : ''}">
+    <div class="match-meta">
+      ${m.group_name ? `<span class="match-group">Grupo ${esc(m.group_name)}</span>` : `<span class="match-group">${esc(m.phase_display || '')}</span>`}
+      <span class="match-date">${dateStr}</span>
+      <span class="match-badge ${badgeClass(status)}">${badgeLabel(status)}</span>
+    </div>
+    <div class="match-teams">
+      <div class="team"><span class="team-flag">${m.home_flag || '🏳'}</span><span class="team-name">${esc(m.home_team)}</span></div>
+      <span class="match-vs">VS</span>
+      <div class="team"><span class="team-flag">${m.away_flag || '🏳'}</span><span class="team-name">${esc(m.away_team)}</span></div>
+    </div>
+    ${scoreSection}
+  </div>`;
+}
+
+async function loadHomePrizes() {
+  try {
+    const { prizes } = await api('/prizes');
+    prizesData = prizes;
+    renderPrizesIn('home-prizes', prizes);
+  } catch {}
+}
+
+function renderPrizesIn(containerId, prizes) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!prizes?.length) { el.innerHTML = '<p class="loading-text">Sin premios definidos aún</p>'; return; }
+  const medalOf  = pos => pos <= 2 ? ['🥇','🥈'][pos-1] : '🥉';
+  const labelOf  = pos => pos <= 2 ? `${ordinal(pos)} Lugar` : '3er Lugar (empate)';
+  const stylePos = pos => pos <= 3 ? pos : 3;
+  el.innerHTML = prizes.map(p => `
+    <div class="prize-card prize-${stylePos(p.position)}">
+      <div class="prize-medal">${medalOf(p.position)}</div>
+      <div class="prize-pos">${labelOf(p.position)}</div>
+      <div class="prize-desc">${esc(p.description)}</div>
+    </div>`).join('');
 }
 
 // ── Ranking ──────────────────────────────────────────
@@ -505,23 +593,7 @@ async function renderPrizes() {
   try {
     const { prizes } = await api('/prizes');
     prizesData = prizes;
-    const el = document.getElementById('prizes-list');
-    if (!prizes.length) {
-      el.innerHTML = '<div class="empty-state"><span class="empty-state-icon">🏆</span>Premios por definir</div>';
-      return;
-    }
-    const medalOf  = pos => pos <= 2 ? ['🥇','🥈'][pos-1] : '🥉';
-    const labelOf  = pos => pos <= 2 ? `${ordinal(pos)} Lugar` : '3er Lugar (empate)';
-    const stylePos = pos => pos <= 3 ? pos : 3;   // positions 3 & 4 share bronze style
-    el.innerHTML = prizes.map(p => `
-      <div class="prize-card p-${stylePos(p.position)}">
-        <div class="prize-medal">${medalOf(p.position)}</div>
-        <div>
-          <div class="prize-pos">${labelOf(p.position)}</div>
-          <div class="prize-desc">${esc(p.description)}</div>
-        </div>
-      </div>
-    `).join('');
+    renderPrizesIn('prizes-list', prizes);
   } catch {
     document.getElementById('prizes-list').innerHTML = '<p class="loading-text">Error cargando premios</p>';
   }
