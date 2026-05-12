@@ -6,7 +6,10 @@ let db;
 
 function getDb() {
   if (!db) {
-    db = new Database(path.join(__dirname, 'quiniela.db'));
+    const dbPath = process.env.NODE_ENV === 'production'
+      ? '/app/data/quiniela.db'
+      : path.join(__dirname, 'quiniela.db');
+    db = new Database(dbPath);
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
     initSchema();
