@@ -649,19 +649,20 @@ details[open] > .group-accordion-header::after { transform: rotate(90deg); }
   .match-date  { flex: 1; }
   .match-badge { margin-left: auto; }
 
-  /* Prediction inputs — centered, button easier to tap */
+  /* Prediction inputs — score centered, button on its own row below */
   .predict-inputs {
+    flex-wrap: wrap;
     justify-content: center;
+    gap: .6rem;
   }
   .predict-inputs .btn {
-    flex: 1;
-    min-width: 0;
+    flex-basis: 100%;
     justify-content: center;
   }
   .score-input {
-    width: 60px !important;
-    font-size: 1.25rem !important;
-    padding: .55rem .3rem !important;
+    width: 64px !important;
+    font-size: 1.3rem !important;
+    padding: .6rem .3rem !important;
   }
   .predict-saved-label,
   .deadline-ok,
