@@ -587,14 +587,17 @@ async function saveAllPredictions() {
   const fab = document.getElementById('save-all-fab');
   if (fab) fab.disabled = true;
 
-  let saved = 0, errors = 0;
+  let saved = 0, incomplete = 0, errors = 0;
   await Promise.all([...dirtyPredictions].map(async (matchId) => {
     const hEl = document.getElementById(`h${matchId}`);
     const aEl = document.getElementById(`a${matchId}`);
     if (!hEl || !aEl) return;
     const home = parseInt(hEl.value, 10);
     const away = parseInt(aEl.value, 10);
-    if (isNaN(home) || isNaN(away) || home < 0 || away < 0) { errors++; return; }
+    const homeEmpty = hEl.value.trim() === '';
+    const awayEmpty = aEl.value.trim() === '';
+    if (homeEmpty && awayEmpty) return;
+    if (homeEmpty || awayEmpty || isNaN(home) || isNaN(away) || home < 0 || away < 0) { incomplete++; return; }
     try {
       await api('/predictions', { method: 'POST', body: { matchId, homeScore: home, awayScore: away } });
       myPredictions[matchId] = { match_id: matchId, home_score: home, away_score: away };
@@ -606,9 +609,16 @@ async function saveAllPredictions() {
   if (fab) fab.disabled = false;
   updateFab();
 
-  if (saved > 0 && errors === 0)    showToast(`¡${saved} pronóstico(s) guardado(s)!`, 'success');
-  else if (saved > 0)               showToast(`${saved} guardado(s), ${errors} con error`, 'error');
-  else                              showToast('Error al guardar pronósticos', 'error');
+  if (incomplete > 0 && saved === 0 && errors === 0)
+    showToast(`Debes ingresar ambos marcadores (local y visitante) para guardar`, 'error');
+  else if (incomplete > 0 && saved > 0)
+    showToast(`¡${saved} guardado(s)! — ${incomplete} incompleto(s): ingresa ambos marcadores`, 'error');
+  else if (saved > 0 && errors === 0)
+    showToast(`¡${saved} pronóstico(s) guardado(s)!`, 'success');
+  else if (saved > 0)
+    showToast(`${saved} guardado(s), ${errors} con error`, 'error');
+  else
+    showToast('Error al guardar pronósticos', 'error');
 
   renderPredGrid(activePredTab);
 
