@@ -475,11 +475,11 @@ function matchCard(m, pred, phase) {
       <div class="match-predict">
         <div class="predict-inputs">
           <input class="score-input" id="h${m.id}" type="number" min="0" max="30"
-            value="${esc(String(savedHome))}" placeholder="0"
+            value="${esc(String(savedHome))}"
             oninput="markDirty(${m.id})">
           <span class="predict-sep">:</span>
           <input class="score-input" id="a${m.id}" type="number" min="0" max="30"
-            value="${esc(String(savedAway))}" placeholder="0"
+            value="${esc(String(savedAway))}"
             oninput="markDirty(${m.id})">
         </div>
         <p class="deadline-ok">${deadlineLabel(m.match_date)}</p>
