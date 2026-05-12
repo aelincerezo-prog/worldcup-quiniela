@@ -608,17 +608,17 @@ details[open] > .group-accordion-header::after { transform: rotate(90deg); }
 .save-all-fab {
   position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
   z-index: 500;
-  background: var(--accent); color: #fff; border: 2px solid rgba(255,255,255,.15);
+  background: #166534; color: #dcfce7; border: 1px solid rgba(255,255,255,.12);
   border-radius: 999px;
   padding: .8rem 2rem;
   font-size: 1rem; font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 28px rgba(34,197,94,.45), 0 2px 8px rgba(0,0,0,.5);
+  box-shadow: 0 4px 16px rgba(0,0,0,.55);
   display: flex; align-items: center; gap: .4rem;
   white-space: nowrap;
-  transition: transform .15s, box-shadow .2s, background .2s;
+  transition: transform .15s, background .2s;
 }
-.save-all-fab:hover  { transform: translateX(-50%) scale(1.05); box-shadow: 0 6px 32px rgba(34,197,94,.6), 0 2px 8px rgba(0,0,0,.5); }
+.save-all-fab:hover  { transform: translateX(-50%) scale(1.04); background: #15803d; }
 .save-all-fab:active { transform: translateX(-50%) scale(.97); }
 .save-all-fab.fab-idle {
   background: rgba(20,28,40,.92);
