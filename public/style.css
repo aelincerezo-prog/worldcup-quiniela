@@ -643,4 +643,38 @@ details[open] > .group-accordion-header::after { transform: rotate(90deg); }
   .prize-desc  { font-size: .95rem; }
   .toast       { right: .75rem; left: .75rem; max-width: none; }
   .admin-card  { padding: 1rem; }
+
+  /* Match card meta — wrap gracefully */
+  .match-meta  { flex-wrap: wrap; row-gap: .35rem; }
+  .match-date  { flex: 1; }
+  .match-badge { margin-left: auto; }
+
+  /* Prediction inputs — centered, button easier to tap */
+  .predict-inputs {
+    justify-content: center;
+  }
+  .predict-inputs .btn {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+  }
+  .score-input {
+    width: 60px !important;
+    font-size: 1.25rem !important;
+    padding: .55rem .3rem !important;
+  }
+  .predict-saved-label,
+  .deadline-ok,
+  .deadline-warn { text-align: center; }
+
+  /* Pred compare (result + pts) */
+  .pred-compare { gap: .5rem; }
+
+  /* My rank card stacks on very small screens */
+  .my-rank-inner   { gap: .85rem; }
+  .my-rank-divider { display: none; }
+
+  /* Phase tabs scroll horizontally */
+  .phase-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: .25rem; }
+  .phase-tab  { flex-shrink: 0; }
 }
