@@ -413,6 +413,28 @@ app.put('/api/admin/users/:id/reset-password', auth, adminOnly, async (req, res)
   res.json({ ok: true });
 });
 
+// One-time admin setup (only works when SETUP_TOKEN env var is set)
+app.post('/api/setup', async (req, res) => {
+  const token = process.env.SETUP_TOKEN;
+  if (!token) return res.status(404).json({ error: 'Not found' });
+  if (req.body.token !== token) return res.status(401).json({ error: 'Token inválido' });
+
+  const { username, password, email } = req.body;
+  if (!username || !password || !email)
+    return res.status(400).json({ error: 'Faltan campos: username, password, email' });
+  if (password.length < 6)
+    return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+
+  const db   = getDb();
+  const hash = await bcrypt.hash(String(password), 12);
+  db.prepare('DELETE FROM predictions').run();
+  db.prepare('DELETE FROM users').run();
+  db.prepare('INSERT INTO users (username, password_hash, email, role) VALUES (?,?,?,?)')
+    .run(String(username), hash, String(email), 'admin');
+  console.log(`[SETUP] Admin creado: ${username}`);
+  res.json({ ok: true, message: `Admin "${username}" creado. Elimina SETUP_TOKEN de Railway ahora.` });
+});
+
 // Serve SPA for all non-API routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
