@@ -111,6 +111,7 @@ async function handleRegister(e) {
       method: 'POST',
       body: {
         username: document.getElementById('r-user').value,
+        email:    document.getElementById('r-email').value,
         password: pass,
       },
     });
@@ -147,6 +148,7 @@ function navigate(view) {
   else if (view === 'predictions') renderPredictions();
   else if (view === 'prizes')      renderPrizes();
   else if (view === 'admin')       renderAdmin();
+  else if (view === 'profile')     renderProfile();
 }
 
 function toggleMenu() {
@@ -672,15 +674,17 @@ function renderAdminUsers(users) {
   }
   el.innerHTML = `<div class="users-table-wrap"><table class="users-table">
     <thead><tr>
-      <th>#</th><th>Usuario</th><th>Rol</th><th>Puntos</th><th>Registro</th>
+      <th>#</th><th>Usuario</th><th>Correo</th><th>Rol</th><th>Puntos</th><th>Registro</th><th></th>
     </tr></thead>
     <tbody>${users.map((u, i) => `
       <tr>
         <td>${i + 1}</td>
         <td>${esc(u.username)}</td>
+        <td style="color:var(--text2);font-size:.82rem">${u.email ? `<a href="mailto:${esc(u.email)}" style="color:var(--primary)">${esc(u.email)}</a>` : '<span style="color:var(--text3)">—</span>'}</td>
         <td><span class="${u.role === 'admin' ? 'badge-admin' : 'badge-user'}">${u.role}</span></td>
         <td style="font-weight:700;color:var(--primary)">${u.total_points}</td>
         <td style="color:var(--text3);font-size:.8rem">${formatDate(u.created_at)}</td>
+        <td><button class="btn btn-sm btn-ghost" onclick="handleResetPassword(${u.id}, '${esc(u.username)}')">🔑 Reset</button></td>
       </tr>`).join('')}
     </tbody>
   </table></div>`;
@@ -762,3 +766,80 @@ setInterval(() => {
   if (currentUser && !document.getElementById('view-home').classList.contains('hidden'))
     loadRanking();
 }, 120_000);
+
+// ═══════════════════════════════════════════════════════
+// PROFILE VIEW
+// ═══════════════════════════════════════════════════════
+function renderProfile() {
+  document.getElementById('p-email').value = currentUser.email || '';
+  document.getElementById('profile-err').classList.add('hidden');
+  document.getElementById('chpwd-err').classList.add('hidden');
+  document.getElementById('chpwd-form').reset();
+}
+
+async function handleUpdateProfile(e) {
+  e.preventDefault();
+  const btn   = e.submitter;
+  const err   = document.getElementById('profile-err');
+  const email = document.getElementById('p-email').value.trim();
+  err.classList.add('hidden');
+  btnLoading(btn, true);
+  try {
+    const data = await api('/auth/profile', { method: 'PUT', body: { email } });
+    currentUser = data.user;
+    showToast('Correo actualizado', 'success');
+  } catch (ex) {
+    err.textContent = ex.message;
+    err.classList.remove('hidden');
+  } finally {
+    btnLoading(btn, false);
+  }
+}
+
+async function handleChangePassword(e) {
+  e.preventDefault();
+  const btn      = e.submitter;
+  const err      = document.getElementById('chpwd-err');
+  const current  = document.getElementById('cp-current').value;
+  const newPwd   = document.getElementById('cp-new').value;
+  const confirm  = document.getElementById('cp-conf').value;
+  err.classList.add('hidden');
+  if (newPwd !== confirm) {
+    err.textContent = 'Las contraseñas no coinciden';
+    err.classList.remove('hidden');
+    return;
+  }
+  if (newPwd.length < 6) {
+    err.textContent = 'La contraseña debe tener al menos 6 caracteres';
+    err.classList.remove('hidden');
+    return;
+  }
+  btnLoading(btn, true);
+  try {
+    await api('/auth/password', { method: 'PUT', body: { currentPassword: current, newPassword: newPwd } });
+    document.getElementById('chpwd-form').reset();
+    showToast('Contraseña actualizada', 'success');
+  } catch (ex) {
+    err.textContent = ex.message;
+    err.classList.remove('hidden');
+  } finally {
+    btnLoading(btn, false);
+  }
+}
+
+async function handleResetPassword(userId, username) {
+  const newPwd = prompt(`Nueva contraseña para "${username}" (mín. 6 caracteres):`);
+  if (!newPwd) return;
+  if (newPwd.length < 6) { showToast('Mínimo 6 caracteres', 'error'); return; }
+  try {
+    await api(`/admin/users/${userId}/reset-password`, { method: 'PUT', body: { newPassword: newPwd } });
+    showToast(`Contraseña de ${username} restablecida`, 'success');
+  } catch (ex) {
+    showToast(ex.message, 'error');
+  }
+}
+
+function showForgotMsg(e) {
+  e.preventDefault();
+  showToast('Contacta al administrador para restablecer tu contraseña', 'info');
+}

@@ -63,7 +63,7 @@ function sanitize(str) {
 
 // ── AUTH ─────────────────────────────────────────────────────────────────────
 app.post('/api/auth/register', authLimiter, (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, email } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
 
   const user = sanitize(username);
@@ -74,12 +74,17 @@ app.post('/api/auth/register', authLimiter, (req, res) => {
   if (String(password).length < 6)
     return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
 
+  const emailVal = sanitize(email || '');
+  if (!emailVal) return res.status(400).json({ error: 'El correo electrónico es requerido' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal))
+    return res.status(400).json({ error: 'Formato de correo inválido' });
+
   const db = getDb();
   try {
     const hash  = bcrypt.hashSync(String(password), 12);
     const count = db.prepare('SELECT COUNT(*) as n FROM users').get().n;
     const role  = count === 0 ? 'admin' : 'user';
-    const result = db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)').run(user, hash, role);
+    const result = db.prepare('INSERT INTO users (username, password_hash, email, role) VALUES (?, ?, ?, ?)').run(user, hash, emailVal, role);
     const newUser = { id: result.lastInsertRowid, username: user, role };
     setCookie(res, sign(newUser));
     res.status(201).json({ user: newUser });
@@ -110,7 +115,39 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 app.get('/api/auth/me', auth, (req, res) => {
-  res.json({ user: req.user });
+  const db   = getDb();
+  const user = db.prepare('SELECT id, username, email, role FROM users WHERE id = ?').get(req.user.id);
+  res.json({ user });
+});
+
+// Update own email
+app.put('/api/auth/profile', auth, (req, res) => {
+  const { email } = req.body;
+  const emailVal  = sanitize(email || '');
+  if (!emailVal)
+    return res.status(400).json({ error: 'El correo es requerido' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal))
+    return res.status(400).json({ error: 'Formato de correo inválido' });
+  const db = getDb();
+  db.prepare('UPDATE users SET email = ? WHERE id = ?').run(emailVal, req.user.id);
+  const updated = db.prepare('SELECT id,username,email,role FROM users WHERE id=?').get(req.user.id);
+  res.json({ ok: true, user: updated });
+});
+
+// Change own password (requires current password)
+app.put('/api/auth/password', auth, (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword)
+    return res.status(400).json({ error: 'Faltan campos' });
+  if (String(newPassword).length < 6)
+    return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+  const db   = getDb();
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+  if (!bcrypt.compareSync(String(currentPassword), user.password_hash))
+    return res.status(401).json({ error: 'Contraseña actual incorrecta' });
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+    .run(bcrypt.hashSync(String(newPassword), 12), req.user.id);
+  res.json({ ok: true });
 });
 
 // ── PHASES ────────────────────────────────────────────────────────────────────
@@ -328,7 +365,7 @@ app.put('/api/admin/prizes', auth, adminOnly, (req, res) => {
 app.get('/api/admin/users', auth, adminOnly, (req, res) => {
   const db = getDb();
   const rows = db.prepare(`
-    SELECT u.id, u.username, u.role, u.created_at,
+    SELECT u.id, u.username, u.email, u.role, u.created_at,
            COALESCE(SUM(pr.points), 0) AS total_points
     FROM users u
     LEFT JOIN predictions pr ON u.id = pr.user_id
@@ -336,6 +373,19 @@ app.get('/api/admin/users', auth, adminOnly, (req, res) => {
     ORDER BY total_points DESC
   `).all();
   res.json({ users: rows });
+});
+
+// Reset a user's password (admin)
+app.put('/api/admin/users/:id/reset-password', auth, adminOnly, async (req, res) => {
+  const { newPassword } = req.body;
+  if (!newPassword || newPassword.length < 6)
+    return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+  const db   = getDb();
+  const user = db.prepare('SELECT id FROM users WHERE id = ?').get(parseInt(req.params.id, 10));
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+  const hash = await bcrypt.hash(newPassword, 12);
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, user.id);
+  res.json({ ok: true });
 });
 
 // Serve SPA for all non-API routes

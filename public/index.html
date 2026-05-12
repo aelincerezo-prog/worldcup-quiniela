@@ -38,6 +38,9 @@
       </div>
       <div id="login-err" class="form-error hidden"></div>
       <button type="submit" class="btn btn-primary btn-full" id="login-btn">Iniciar Sesión</button>
+      <p class="auth-note" style="text-align:center;margin-top:.75rem;">
+        <a href="#" onclick="showForgotMsg(event)" style="color:var(--accent);font-size:.85rem;">¿Olvidaste tu contraseña?</a>
+      </p>
     </form>
 
     <!-- Register -->
@@ -45,6 +48,10 @@
       <div class="form-group">
         <label for="r-user">Usuario</label>
         <input id="r-user" type="text" placeholder="Elige un nombre (3–30 chars)" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label for="r-email">Correo electrónico</label>
+        <input id="r-email" type="email" placeholder="tu@correo.com" autocomplete="email" required>
       </div>
       <div class="form-group">
         <label for="r-pass">Contraseña</label>
@@ -73,6 +80,7 @@
       <a class="nav-link"       data-view="predictions"  onclick="navigate('predictions')">📋 Mis Pronósticos</a>
       <a class="nav-link"       data-view="prizes"       onclick="navigate('prizes')">🏆 Premios</a>
       <a class="nav-link hidden" data-view="admin" id="admin-nav" onclick="navigate('admin')">⚙️ Admin</a>
+      <a class="nav-link" data-view="profile" onclick="navigate('profile')">👤 Mi Perfil</a>
     </div>
     <div class="nav-user">
       <span class="nav-username" id="nav-username"></span>
@@ -224,6 +232,48 @@
 
       </section>
     </div><!-- /view-admin -->
+
+    <!-- ── PROFILE ──────────────────────────────────────────────────────── -->
+    <div id="view-profile" class="view hidden">
+      <section class="section">
+        <h2 class="section-title">👤 Mi Perfil</h2>
+
+        <!-- Edit email -->
+        <div class="admin-card">
+          <h3 class="admin-card-title">✉️ Correo Electrónico</h3>
+          <form id="profile-form" onsubmit="handleUpdateProfile(event)">
+            <div class="form-group">
+              <label for="p-email">Correo electrónico</label>
+              <input id="p-email" type="email" placeholder="tu@correo.com" autocomplete="email">
+            </div>
+            <div id="profile-err" class="form-error hidden"></div>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </form>
+        </div>
+
+        <!-- Change password -->
+        <div class="admin-card">
+          <h3 class="admin-card-title">🔒 Cambiar Contraseña</h3>
+          <form id="chpwd-form" onsubmit="handleChangePassword(event)">
+            <div class="form-group">
+              <label for="cp-current">Contraseña actual</label>
+              <input id="cp-current" type="password" placeholder="Tu contraseña actual" autocomplete="current-password" required>
+            </div>
+            <div class="form-group">
+              <label for="cp-new">Nueva contraseña</label>
+              <input id="cp-new" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required>
+            </div>
+            <div class="form-group">
+              <label for="cp-conf">Confirmar nueva contraseña</label>
+              <input id="cp-conf" type="password" placeholder="Repite la nueva contraseña" autocomplete="new-password" required>
+            </div>
+            <div id="chpwd-err" class="form-error hidden"></div>
+            <button type="submit" class="btn btn-primary">Cambiar Contraseña</button>
+          </form>
+        </div>
+
+      </section>
+    </div><!-- /view-profile -->
 
   </main>
 </div><!-- /app -->
