@@ -186,12 +186,15 @@ async function loadActivePhase() {
       const byGroup = {};
       for (const m of phaseMatches) (byGroup[m.group_name || 'Otros'] = byGroup[m.group_name || 'Otros'] || []).push(m);
       el.innerHTML = Object.entries(byGroup).map(([g, ms]) => `
-        <div style="grid-column:1/-1">
-          <div class="group-header">Grupo ${g}</div>
-          <div class="matches-grid" style="margin:0">${ms.map(m => homeMatchCard(m, active)).join('')}</div>
-        </div>`).join('');
+        <details class="group-accordion">
+          <summary class="group-accordion-header">
+            <span>Grupo ${g}</span>
+            <span class="group-accordion-meta">${ms.filter(m => m.is_finished).length}/${ms.length} jugados</span>
+          </summary>
+          <div class="matches-grid group-accordion-body">${ms.map(m => homeMatchCard(m, active)).join('')}</div>
+        </details>`).join('');
     } else {
-      el.innerHTML = phaseMatches.map(m => homeMatchCard(m, active)).join('');
+      el.innerHTML = `<div class="matches-grid">${phaseMatches.map(m => homeMatchCard(m, active)).join('')}</div>`;
     }
   } catch {
     document.getElementById('active-phase-matches').innerHTML = '<p class="loading-text">Error cargando partidos</p>';

@@ -446,6 +446,36 @@ select option { background: var(--bg3); }
 .prize-pos   { font-size: .75rem; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; }
 .prize-desc  { font-size: 1.1rem; font-weight: 600; }
 
+/* ── GROUP ACCORDION ─────────────────────────────────── */
+.group-accordion {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: .6rem;
+  overflow: hidden;
+}
+.group-accordion-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .85rem 1.1rem;
+  cursor: pointer;
+  font-size: .85rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--text3);
+  list-style: none;
+  user-select: none;
+  transition: background var(--transition);
+}
+.group-accordion-header::-webkit-details-marker { display: none; }
+.group-accordion-header::after {
+  content: '›';
+  font-size: 1.2rem; color: var(--text3);
+  transition: transform .2s;
+  margin-left: .5rem;
+}
+details[open] > .group-accordion-header::after { transform: rotate(90deg); }
+.group-accordion-header:hover { background: var(--bg3); }
+.group-accordion-meta { font-size: .75rem; font-weight: 500; color: var(--text3); margin-left: auto; margin-right: .75rem; }
+.group-accordion-body { padding: .75rem; }
+
 /* ── RULES ────────────────────────────────────────────── */
 .rules-card {
   background: var(--bg2);
