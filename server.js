@@ -14,6 +14,7 @@ const SECRET = process.env.JWT_SECRET || 'quiniela-mundial-2026-secret-CHANGE-IN
 const COOKIE = 'qm_token';
 
 // ── Security middleware ──────────────────────────────────────────────────────
+app.set('trust proxy', 1); // Railway / Render sit behind a reverse proxy
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
