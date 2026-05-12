@@ -236,8 +236,9 @@ function homeMatchCard(m, phase) {
       <span class="result-score">${m.away_score}</span>
     </div>`;
   } else {
-    scoreSection = `<p class="match-badge ${badgeClass(status)}" style="text-align:center;margin-top:.5rem">${badgeLabel(status)}</p>
-      ${status === 'open' ? `<p class="deadline-ok" style="text-align:center">${deadlineLabel(m.match_date)}</p>` : ''}`;
+    scoreSection = status === 'open'
+      ? `<p class="deadline-ok" style="text-align:center">${deadlineLabel(m.match_date)}</p>`
+      : '';
   }
   return `<div class="match-card ${m.is_finished ? 'finished' : ''}">
     <div class="match-meta">
