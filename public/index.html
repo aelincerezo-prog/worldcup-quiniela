@@ -298,6 +298,23 @@
 <!-- Toast -->
 <div id="toast" class="toast hidden" role="alert"></div>
 
+<!-- Floating save-all button (predictions) -->
+<button id="save-all-fab" class="save-all-fab hidden" onclick="saveAllPredictions()">
+  💾 Guardar <span id="fab-count">0</span>
+</button>
+
+<!-- Unsaved changes modal -->
+<div id="unsaved-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <p class="modal-title">⚠️ Cambios sin guardar</p>
+    <p class="modal-body">Tienes pronósticos sin guardar. Si continúas, se perderán.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="discardAndNavigate()">Salir sin guardar</button>
+      <button class="btn btn-primary" onclick="closeUnsavedModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Loading overlay -->
 <div id="page-loader" class="page-loader">
   <div class="loader-ball">⚽</div>

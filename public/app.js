@@ -12,6 +12,8 @@ let prizesData    = [];
 let activePhaseTab = null;
 let activePredTab  = null;
 let toastTimer     = null;
+let dirtyPredictions = new Set();
+let pendingNavTarget = null;
 
 // ═══════════════════════════════════════════════════════
 // Bootstrap
@@ -126,8 +128,19 @@ async function handleRegister(e) {
 }
 
 async function handleLogout() {
+  if (dirtyPredictions.size > 0) {
+    pendingNavTarget = '__logout__';
+    showUnsavedModal();
+    return;
+  }
+  doLogout();
+}
+
+async function doLogout() {
   await api('/auth/logout', { method: 'POST' }).catch(() => {});
   currentUser = null;
+  dirtyPredictions.clear();
+  updateFab();
   allMatches = []; allPhases = []; myPredictions = {}; rankingData = []; prizesData = [];
   document.getElementById('admin-nav').classList.add('hidden');
   showAuth();
@@ -137,6 +150,17 @@ async function handleLogout() {
 // Navigation
 // ═══════════════════════════════════════════════════════
 function navigate(view) {
+  if (view !== 'predictions' && dirtyPredictions.size > 0) {
+    pendingNavTarget = view;
+    showUnsavedModal();
+    return;
+  }
+  doNavigate(view);
+}
+
+function doNavigate(view) {
+  dirtyPredictions.clear();
+  updateFab();
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
   document.querySelectorAll('.nav-link').forEach(l => {
     l.classList.toggle('active', l.dataset.view === view);
@@ -451,13 +475,12 @@ function matchCard(m, pred, phase) {
       <div class="match-predict">
         <div class="predict-inputs">
           <input class="score-input" id="h${m.id}" type="number" min="0" max="30"
-            value="${esc(String(savedHome))}" placeholder="0">
+            value="${esc(String(savedHome))}" placeholder="0"
+            oninput="markDirty(${m.id})">
           <span class="predict-sep">:</span>
           <input class="score-input" id="a${m.id}" type="number" min="0" max="30"
-            value="${esc(String(savedAway))}" placeholder="0">
-          <button class="btn btn-primary btn-sm" onclick="savePrediction(${m.id})" id="save-btn-${m.id}">
-            💾 Guardar
-          </button>
+            value="${esc(String(savedAway))}" placeholder="0"
+            oninput="markDirty(${m.id})">
         </div>
         ${pred ? `<p class="predict-saved-label">Guardado: ${pred.home_score}–${pred.away_score}</p>` : ''}
         <p class="deadline-ok">${deadlineLabel(m.match_date)}</p>
@@ -541,10 +564,88 @@ async function savePrediction(matchId) {
 }
 
 
+// ─── Dirty / FAB ────────────────────────────────────────
+function markDirty(matchId) {
+  dirtyPredictions.add(matchId);
+  updateFab();
+}
+
+function updateFab() {
+  const fab   = document.getElementById('save-all-fab');
+  const count = document.getElementById('fab-count');
+  if (!fab) return;
+  if (dirtyPredictions.size > 0) {
+    fab.classList.remove('hidden');
+    if (count) count.textContent = dirtyPredictions.size;
+  } else {
+    fab.classList.add('hidden');
+  }
+}
+
+async function saveAllPredictions() {
+  if (dirtyPredictions.size === 0) return;
+  const fab = document.getElementById('save-all-fab');
+  if (fab) fab.disabled = true;
+
+  let saved = 0, errors = 0;
+  await Promise.all([...dirtyPredictions].map(async (matchId) => {
+    const hEl = document.getElementById(`h${matchId}`);
+    const aEl = document.getElementById(`a${matchId}`);
+    if (!hEl || !aEl) return;
+    const home = parseInt(hEl.value, 10);
+    const away = parseInt(aEl.value, 10);
+    if (isNaN(home) || isNaN(away) || home < 0 || away < 0) { errors++; return; }
+    try {
+      await api('/predictions', { method: 'POST', body: { matchId, homeScore: home, awayScore: away } });
+      myPredictions[matchId] = { match_id: matchId, home_score: home, away_score: away };
+      saved++;
+    } catch { errors++; }
+  }));
+
+  dirtyPredictions.clear();
+  if (fab) fab.disabled = false;
+  updateFab();
+
+  if (saved > 0 && errors === 0)    showToast(`¡${saved} pronóstico(s) guardado(s)!`, 'success');
+  else if (saved > 0)               showToast(`${saved} guardado(s), ${errors} con error`, 'error');
+  else                              showToast('Error al guardar pronósticos', 'error');
+
+  renderPredGrid(activePredTab);
+
+  if (pendingNavTarget) {
+    const target = pendingNavTarget;
+    pendingNavTarget = null;
+    if (target === '__logout__') doLogout();
+    else doNavigate(target);
+  }
+}
+
+// ─── Unsaved modal ───────────────────────────────────────
+function showUnsavedModal() {
+  document.getElementById('unsaved-modal').classList.remove('hidden');
+}
+
+function closeUnsavedModal() {
+  document.getElementById('unsaved-modal').classList.add('hidden');
+  pendingNavTarget = null;
+}
+
+function discardAndNavigate() {
+  document.getElementById('unsaved-modal').classList.add('hidden');
+  const target = pendingNavTarget;
+  pendingNavTarget = null;
+  dirtyPredictions.clear();
+  updateFab();
+  if (target === '__logout__') doLogout();
+  else doNavigate(target);
+}
+
 // ═══════════════════════════════════════════════════════
 // MY PREDICTIONS VIEW
 // ═══════════════════════════════════════════════════════
 async function renderPredictions() {
+  dirtyPredictions.clear();
+  updateFab();
   const [mRes, phRes, prRes] = await Promise.all([
     api('/matches').catch(() => ({ matches: [] })),
     api('/phases').catch(() => ({ phases: [] })),
