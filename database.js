@@ -24,6 +24,7 @@ function initSchema() {
       id            INTEGER PRIMARY KEY AUTOINCREMENT,
       username      TEXT    UNIQUE NOT NULL COLLATE NOCASE,
       password_hash TEXT    NOT NULL,
+      email         TEXT,
       role          TEXT    NOT NULL DEFAULT 'user' CHECK(role IN ('user','admin')),
       created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
     );
@@ -68,6 +69,11 @@ function initSchema() {
       description TEXT    NOT NULL
     );
   `);
+  // Migration: add email column if it doesn't exist yet
+  const cols = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
+  if (!cols.includes('email')) {
+    db.exec('ALTER TABLE users ADD COLUMN email TEXT');
+  }
 }
 
 function seedData() {
