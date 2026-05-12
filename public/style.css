@@ -621,6 +621,7 @@ details[open] > .group-accordion-header::after { transform: rotate(90deg); }
 .save-all-fab:hover  { transform: translateX(-50%) scale(1.05); }
 .save-all-fab:active { transform: translateX(-50%) scale(.97); }
 .save-all-fab:disabled { opacity: .6; cursor: not-allowed; }
+.save-all-fab.fab-idle { background: var(--card); color: var(--text3); border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,.25); }
 
 /* ── UNSAVED MODAL ────────────────────────────────────── */
 .modal-overlay {

@@ -570,16 +570,17 @@ function markDirty(matchId) {
   updateFab();
 }
 
-function updateFab() {
+function updateFab(onPredView) {
   const fab   = document.getElementById('save-all-fab');
-  const count = document.getElementById('fab-count');
+  const label = document.getElementById('fab-label');
   if (!fab) return;
-  if (dirtyPredictions.size > 0) {
-    fab.classList.remove('hidden');
-    if (count) count.textContent = dirtyPredictions.size;
-  } else {
-    fab.classList.add('hidden');
-  }
+  const onPreds = onPredView ?? !document.getElementById('view-predictions').classList.contains('hidden');
+  if (!onPreds) { fab.classList.add('hidden'); return; }
+  fab.classList.remove('hidden');
+  const n = dirtyPredictions.size;
+  fab.disabled = n === 0;
+  fab.classList.toggle('fab-idle', n === 0);
+  if (label) label.textContent = n > 0 ? `Guardar (${n})` : 'Guardar';
 }
 
 async function saveAllPredictions() {
@@ -669,6 +670,7 @@ async function renderPredictions() {
 
   if (!activePredTab) activePredTab = allPhases[0]?.id;
   renderPredGrid(activePredTab);
+  updateFab(true);
 }
 
 function selectPredTab(phaseId) {
