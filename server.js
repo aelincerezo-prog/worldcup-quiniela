@@ -14,17 +14,7 @@ const SECRET = process.env.JWT_SECRET || 'quiniela-mundial-2026-secret-CHANGE-IN
 const COOKIE = 'qm_token';
 
 // ── Security middleware ──────────────────────────────────────────────────────
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc:  ["'self'", "'unsafe-inline'", 'fonts.googleapis.com'],
-      styleSrc:   ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'fonts.gstatic.com'],
-      fontSrc:    ["'self'", 'fonts.gstatic.com'],
-      imgSrc:     ["'self'", 'data:'],
-    },
-  },
-}));
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
