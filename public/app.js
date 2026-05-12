@@ -451,7 +451,12 @@ function matchCard(m, pred, phase) {
       ${pred ? `<p class="predict-saved-label" style="margin-top:.5rem;text-align:center">Tu pronóstico: ${pred.home_score}–${pred.away_score}</p>` : '<p class="predict-info">Sin pronóstico registrado</p>'}
     `;
   } else {
-    scoreSection = `<p class="match-badge badge-inactive" style="text-align:center">⏳ Fase no activa</p>`;
+    scoreSection = pred
+      ? `<div style="text-align:center;margin-top:.25rem">
+           <p class="predict-saved-label" style="margin-bottom:.4rem">Tu pronóstico: ${pred.home_score}–${pred.away_score}</p>
+           <p class="match-badge badge-inactive" style="display:inline-block">⏳ Fase no activa</p>
+         </div>`
+      : `<p class="match-badge badge-inactive" style="text-align:center">⏳ Sin pronóstico</p>`;
   }
 
   const resultClass = m.is_finished && pred
@@ -782,7 +787,10 @@ function renderAdminUsers(users) {
         <td><span class="${u.role === 'admin' ? 'badge-admin' : 'badge-user'}">${u.role}</span></td>
         <td style="font-weight:700;color:var(--primary)">${u.total_points}</td>
         <td style="color:var(--text3);font-size:.8rem">${formatDate(u.created_at)}</td>
-        <td><button class="btn btn-sm btn-ghost" onclick="handleResetPassword(${u.id}, '${esc(u.username)}')">🔑 Reset</button></td>
+        <td style="display:flex;gap:.4rem;flex-wrap:wrap">
+          <button class="btn btn-sm btn-ghost" onclick="handleResetPassword(${u.id}, '${esc(u.username)}')">🔑 Reset</button>
+          ${u.id !== currentUser.id ? `<button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id}, '${esc(u.username)}')">🗑️</button>` : ''}
+        </td>
       </tr>`).join('')}
     </tbody>
   </table></div>`;
@@ -941,6 +949,17 @@ async function handleResetPassword(userId, username) {
   try {
     await api(`/admin/users/${userId}/reset-password`, { method: 'PUT', body: { newPassword: newPwd } });
     showToast(`Contraseña de ${username} restablecida`, 'success');
+  } catch (ex) {
+    showToast(ex.message, 'error');
+  }
+}
+
+async function deleteUser(userId, username) {
+  if (!confirm(`¿Eliminar a "${username}"? Se borrarán también todos sus pronósticos y puntos. Esta acción no se puede deshacer.`)) return;
+  try {
+    await api(`/admin/users/${userId}`, { method: 'DELETE' });
+    showToast(`Usuario "${username}" eliminado`, 'success');
+    renderAdmin();
   } catch (ex) {
     showToast(ex.message, 'error');
   }

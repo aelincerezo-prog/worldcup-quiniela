@@ -387,6 +387,19 @@ app.get('/api/admin/users', auth, adminOnly, (req, res) => {
   res.json({ users: rows });
 });
 
+// Delete a user and all their predictions/points (admin)
+app.delete('/api/admin/users/:id', auth, adminOnly, (req, res) => {
+  const db     = getDb();
+  const userId = parseInt(req.params.id, 10);
+  if (userId === req.user.id)
+    return res.status(400).json({ error: 'No puedes eliminarte a ti mismo' });
+  const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(userId);
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+  db.prepare('DELETE FROM predictions WHERE user_id = ?').run(userId);
+  db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+  res.json({ ok: true, username: user.username });
+});
+
 // Reset a user's password (admin)
 app.put('/api/admin/users/:id/reset-password', auth, adminOnly, async (req, res) => {
   const { newPassword } = req.body;
