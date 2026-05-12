@@ -159,7 +159,7 @@ function toggleMenu() {
 // HOME VIEW
 // ═══════════════════════════════════════════════════════
 async function renderHome() {
-  await Promise.all([loadRanking(), loadActivePhase(), loadHomePrizes()]);
+  await Promise.all([loadRanking(), loadActivePhase()]);
 }
 
 async function loadActivePhase() {
