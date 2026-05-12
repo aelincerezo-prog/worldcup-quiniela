@@ -243,13 +243,15 @@ function renderPrizesIn(containerId, prizes) {
   if (!el) return;
   if (!prizes?.length) { el.innerHTML = '<p class="loading-text">Sin premios definidos aún</p>'; return; }
   const medalOf  = pos => pos <= 2 ? ['🥇','🥈'][pos-1] : '🥉';
-  const labelOf  = pos => pos <= 2 ? `${ordinal(pos)} Lugar` : '3er Lugar (empate)';
+  const labelOf  = pos => pos <= 2 ? `${ordinal(pos)} Lugar` : '3er Lugar';
   const stylePos = pos => pos <= 3 ? pos : 3;
   el.innerHTML = prizes.map(p => `
     <div class="prize-card prize-${stylePos(p.position)}">
       <div class="prize-medal">${medalOf(p.position)}</div>
-      <div class="prize-pos">${labelOf(p.position)}</div>
-      <div class="prize-desc">${esc(p.description)}</div>
+      <div class="prize-info">
+        <div class="prize-pos">${labelOf(p.position)}</div>
+        <div class="prize-desc">${esc(p.description)}</div>
+      </div>
     </div>`).join('');
 }
 

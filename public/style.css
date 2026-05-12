@@ -494,7 +494,8 @@ select option { background: var(--bg3); }
 .prize-card.p-1, .prize-card.prize-1 { border-color: var(--gold);   background: linear-gradient(135deg, var(--bg2), rgba(245,158,11,.08)); }
 .prize-card.p-2, .prize-card.prize-2 { border-color: var(--silver); background: linear-gradient(135deg, var(--bg2), rgba(156,163,175,.08)); }
 .prize-card.p-3, .prize-card.prize-3 { border-color: var(--bronze); background: linear-gradient(135deg, var(--bg2), rgba(205,124,61,.08)); }
-.prize-medal { font-size: 3rem; line-height: 1; }
+.prize-medal { font-size: 3rem; line-height: 1; flex-shrink: 0; }
+.prize-info  { display: flex; flex-direction: column; gap: .2rem; text-align: left; }
 .prize-pos   { font-size: .75rem; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; }
 .prize-desc  { font-size: 1.1rem; font-weight: 600; }
 
