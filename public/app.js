@@ -248,11 +248,16 @@ async function loadMatchesAndPhases() {
   }
 }
 
+function phaseIsVisible(ph) {
+  // Show if active, or if it already has at least one finished match (past phase)
+  if (ph.is_active) return true;
+  return allMatches.some(m => m.phase_id === ph.id && m.is_finished);
+}
+
 function renderPhaseTabs() {
   const tabs = document.getElementById('phase-tabs');
-  tabs.innerHTML = allPhases.map((ph, i) => {
-    const hasMatches = allMatches.some(m => m.phase_id === ph.id);
-    if (!hasMatches) return '';
+  tabs.innerHTML = allPhases.map((ph) => {
+    if (!phaseIsVisible(ph)) return '';
     return `<button
       class="phase-tab ${ph.is_active ? '' : 'inactive'} ${(activePhaseTab ?? firstActivePhaseId()) === ph.id ? 'active' : ''}"
       onclick="selectPhaseTab(${ph.id})">
@@ -357,8 +362,12 @@ function matchCard(m, pred, phase) {
     scoreSection = `<p class="match-badge badge-inactive" style="text-align:center">⏳ Fase no activa</p>`;
   }
 
+  const resultClass = m.is_finished && pred
+    ? (pred.points === 3 ? 'result-exact' : pred.points === 1 ? 'result-correct' : pred.points === 0 ? 'result-wrong' : '')
+    : '';
+
   return `
-    <div class="match-card ${m.is_finished ? 'finished' : ''}">
+    <div class="match-card ${m.is_finished ? 'finished' : ''} ${resultClass}">
       <div class="match-meta">
         ${m.group_name ? `<span class="match-group">Grupo ${esc(m.group_name)}</span>` : `<span class="match-group">${esc(m.phase_display || '')}</span>`}
         <span class="match-date">${dateStr}</span>
@@ -438,11 +447,9 @@ async function renderPredictions() {
   for (const p of prRes.predictions) myPredictions[p.match_id] = p;
 
   const tabs = document.getElementById('pred-phase-tabs');
-  tabs.innerHTML = allPhases.map((ph, i) => {
-    const count = allMatches.filter(m => m.phase_id === ph.id).length;
-    if (!count) return '';
-    const first = activePredTab === null && i === 0;
-    if (first) activePredTab = ph.id;
+  const visiblePhases = allPhases.filter(ph => phaseIsVisible(ph) && allMatches.some(m => m.phase_id === ph.id));
+  if (activePredTab === null && visiblePhases.length) activePredTab = visiblePhases[0].id;
+  tabs.innerHTML = visiblePhases.map((ph) => {
     return `<button
       class="phase-tab ${ph.is_active ? '' : 'inactive'} ${activePredTab === ph.id ? 'active' : ''}"
       onclick="selectPredTab(${ph.id})">
@@ -597,7 +604,10 @@ async function loadResultMatches() {
           <button class="btn btn-primary btn-sm" onclick="setResult(${m.id})">
             ${m.is_finished ? '🔄 Actualizar' : '✅ Registrar'}
           </button>
-          ${!m.is_finished ? `<button class="btn btn-danger btn-sm" onclick="deleteMatch(${m.id})">🗑️ Eliminar</button>` : ''}
+          ${m.is_finished
+            ? `<button class="btn btn-ghost btn-sm" onclick="clearResult(${m.id})" title="Borra el marcador y los puntos calculados">🗑️ Limpiar</button>`
+            : ''
+          }
         </div>
       </div>`).join('');
   } catch (ex) {
@@ -629,6 +639,18 @@ async function deleteMatch(matchId) {
     await api(`/admin/matches/${matchId}`, { method: 'DELETE' });
     showToast('Partido eliminado', 'success');
     loadResultMatches();
+  } catch (ex) {
+    showToast(ex.message, 'error');
+  }
+}
+
+async function clearResult(matchId) {
+  if (!confirm('¿Limpiar el resultado? Se borrarán el marcador y los puntos calculados, pero el partido sigue existiendo.')) return;
+  try {
+    await api(`/admin/matches/${matchId}/result`, { method: 'DELETE' });
+    showToast('Resultado limpiado. Puedes volver a registrarlo.', 'success');
+    loadResultMatches();
+    loadRanking();
   } catch (ex) {
     showToast(ex.message, 'error');
   }
@@ -766,6 +788,15 @@ setInterval(() => {
   if (currentUser && !document.getElementById('view-home').classList.contains('hidden'))
     loadRanking();
 }, 120_000);
+
+// Re-render match cards every 60 s so "closed" status updates in real time
+setInterval(() => {
+  if (!currentUser) return;
+  if (!document.getElementById('view-home').classList.contains('hidden'))
+    renderMatchesForPhase(activePhaseTab);
+  if (!document.getElementById('view-predictions').classList.contains('hidden'))
+    renderPredGrid(activePredTab);
+}, 60_000);
 
 // ═══════════════════════════════════════════════════════
 // PROFILE VIEW

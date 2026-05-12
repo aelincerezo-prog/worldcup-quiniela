@@ -346,6 +346,17 @@ app.delete('/api/admin/matches/:id', auth, adminOnly, (req, res) => {
   res.json({ ok: true });
 });
 
+// Clear a match result (resets to unfinished, nulls out scores and points)
+app.delete('/api/admin/matches/:id/result', auth, adminOnly, (req, res) => {
+  const db    = getDb();
+  const match = db.prepare('SELECT * FROM matches WHERE id = ?').get(parseInt(req.params.id, 10));
+  if (!match)             return res.status(404).json({ error: 'Partido no encontrado' });
+  if (!match.is_finished) return res.status(400).json({ error: 'El partido no tiene resultado registrado' });
+  db.prepare('UPDATE matches SET home_score = NULL, away_score = NULL, is_finished = 0 WHERE id = ?').run(match.id);
+  db.prepare('UPDATE predictions SET points = NULL WHERE match_id = ?').run(match.id);
+  res.json({ ok: true });
+});
+
 // Update prizes
 app.put('/api/admin/prizes', auth, adminOnly, (req, res) => {
   const { prizes } = req.body;
