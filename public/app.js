@@ -378,6 +378,7 @@ function selectPhaseTab(phaseId) {
 
 function renderMatchesForPhase(phaseId) {
   const grid = document.getElementById('matches-grid');
+  if (!grid) return; // element removed from home redesign — safe to skip
   const phase = allPhases.find(p => p.id === phaseId);
   const matches = allMatches.filter(m => m.phase_id === phaseId);
 
@@ -506,7 +507,7 @@ async function savePrediction(matchId) {
     await api('/predictions', { method: 'POST', body: { matchId, homeScore: home, awayScore: away } });
     myPredictions[matchId] = { ...(myPredictions[matchId] || {}), match_id: matchId, home_score: home, away_score: away };
     showToast('¡Pronóstico guardado!', 'success');
-    renderMatchesForPhase(activePhaseTab);
+    renderPredGrid(activePredTab);
   } catch (ex) {
     showToast(ex.message, 'error');
   } finally {
@@ -865,7 +866,7 @@ setInterval(() => {
 setInterval(() => {
   if (!currentUser) return;
   if (!document.getElementById('view-home').classList.contains('hidden'))
-    renderMatchesForPhase(activePhaseTab);
+    loadActivePhase();
   if (!document.getElementById('view-predictions').classList.contains('hidden'))
     renderPredGrid(activePredTab);
 }, 60_000);
