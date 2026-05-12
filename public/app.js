@@ -451,14 +451,12 @@ function matchCard(m, pred, phase) {
       <div class="match-predict">
         <div class="predict-inputs">
           <input class="score-input" id="h${m.id}" type="number" min="0" max="30"
-            value="${esc(String(savedHome))}" placeholder="0"
-            onchange="autoSave(${m.id})">
+            value="${esc(String(savedHome))}" placeholder="0">
           <span class="predict-sep">:</span>
           <input class="score-input" id="a${m.id}" type="number" min="0" max="30"
-            value="${esc(String(savedAway))}" placeholder="0"
-            onchange="autoSave(${m.id})">
+            value="${esc(String(savedAway))}" placeholder="0">
           <button class="btn btn-primary btn-sm" onclick="savePrediction(${m.id})" id="save-btn-${m.id}">
-            ${pred ? '✏️ Editar' : '💾 Guardar'}
+            💾 Guardar
           </button>
         </div>
         ${pred ? `<p class="predict-saved-label">Guardado: ${pred.home_score}–${pred.away_score}</p>` : ''}
@@ -542,11 +540,6 @@ async function savePrediction(matchId) {
   }
 }
 
-let autoSaveTimers = {};
-function autoSave(matchId) {
-  clearTimeout(autoSaveTimers[matchId]);
-  autoSaveTimers[matchId] = setTimeout(() => savePrediction(matchId), 800);
-}
 
 // ═══════════════════════════════════════════════════════
 // MY PREDICTIONS VIEW
