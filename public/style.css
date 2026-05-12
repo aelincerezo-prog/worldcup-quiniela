@@ -661,6 +661,7 @@ details[open] > .group-accordion-header::after { transform: rotate(90deg); }
   font-size: .875rem; font-weight: 600;
   box-shadow: var(--shadow);
   max-width: 340px;
+  text-align: center;
   animation: slideIn .25s ease;
 }
 .toast-success { background: #166534; color: #bbf7d0; border: 1px solid #15803d; }
@@ -727,4 +728,13 @@ details[open] > .group-accordion-header::after { transform: rotate(90deg); }
   /* Phase tabs scroll horizontally */
   .phase-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: .25rem; }
   .phase-tab  { flex-shrink: 0; }
+
+  /* Toast — full width on mobile, no transform centering */
+  .toast {
+    left: 1rem; right: 1rem;
+    transform: none;
+    max-width: none;
+  }
+  @keyframes slideIn  { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
 }
