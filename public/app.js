@@ -258,34 +258,53 @@ async function loadRanking() {
   try {
     const { ranking } = await api('/ranking');
     rankingData = ranking;
-    renderTop5(ranking);
+    renderMyRankCard(ranking);
     renderFullRanking(ranking);
   } catch {
-    document.getElementById('top5').innerHTML = '<p class="loading-text">Error cargando ranking</p>';
+    document.getElementById('my-rank-card').innerHTML = '<p class="loading-text">Error cargando ranking</p>';
   }
 }
 
-function renderTop5(ranking) {
-  const el = document.getElementById('top5');
-  const top = ranking.slice(0, 5);
-  if (!top.length) {
+function rankMedal(i) {
+  // positions 0-based: 0=🥇 1=🥈 2=🥉 3=🥉 (two 3rd prizes) 4+=number
+  if (i === 0) return '🥇';
+  if (i === 1) return '🥈';
+  if (i === 2 || i === 3) return '🥉';
+  return String(i + 1);
+}
+
+function renderMyRankCard(ranking) {
+  const el  = document.getElementById('my-rank-card');
+  el.classList.remove('skeleton-card');
+  if (!ranking.length) {
     el.innerHTML = '<p class="loading-text">Sin participantes aún</p>';
     return;
   }
-  const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
-  el.innerHTML = top.map((u, i) => `
-    <div class="rank-card rank-${i+1}">
-      <div class="rank-medal">${medals[i]}</div>
-      <div class="rank-pos">${ordinal(i+1)} lugar</div>
-      <div class="rank-name" title="${esc(u.username)}">${esc(u.username)}</div>
-      <div class="rank-pts">${u.total_points}</div>
-      <div class="rank-pts-label">puntos</div>
-      <div class="rank-stats">
-        <span class="rank-stat exact" title="Marcador exacto">✓✓ ${u.exact}</span>
-        <span class="rank-stat"       title="Resultado correcto">✓ ${u.correct}</span>
+  const idx  = ranking.findIndex(u => u.id === currentUser.id);
+  if (idx === -1) {
+    el.innerHTML = '<p class="loading-text">Aún no tienes puntos registrados</p>';
+    return;
+  }
+  const me     = ranking[idx];
+  const medal  = rankMedal(idx);
+  const isNum  = !isNaN(Number(medal));
+  el.innerHTML = `
+    <div class="my-rank-inner">
+      <div class="my-rank-pos">
+        <span class="my-rank-medal">${medal}</span>
+        <span class="my-rank-place">${isNum ? ordinal(idx + 1) + ' lugar' : ordinal(idx + 1) + ' lugar'}</span>
       </div>
-    </div>
-  `).join('');
+      <div class="my-rank-divider"></div>
+      <div class="my-rank-pts">
+        <span class="my-rank-pts-num">${me.total_points}</span>
+        <span class="my-rank-pts-label">puntos</span>
+      </div>
+      <div class="my-rank-divider"></div>
+      <div class="my-rank-stats">
+        <span title="Marcador exacto">✓✓ <strong>${me.exact}</strong> exactos</span>
+        <span title="Resultado correcto">✓ <strong>${me.correct}</strong> correctos</span>
+      </div>
+    </div>`;
 }
 
 function renderFullRanking(ranking) {
@@ -294,30 +313,28 @@ function renderFullRanking(ranking) {
     el.innerHTML = '<div class="empty-state"><span class="empty-state-icon">🏆</span>Aún no hay puntuaciones</div>';
     return;
   }
-  const medals = ['🥇','🥈','🥉'];
   el.innerHTML = `
-    <table class="rank-table">
-      <thead><tr>
-        <th class="rt-pos">#</th>
-        <th>Participante</th>
-        <th class="rt-pts">Pts</th>
-        <th class="rt-exact">Exactos</th>
-        <th class="rt-cor">Correctos</th>
-        <th class="rt-cor">Partidos</th>
-      </tr></thead>
-      <tbody>
-        ${ranking.map((u, i) => `
-          <tr>
-            <td class="rt-pos ${i < 3 ? `medal-${i+1}` : ''}">${medals[i] || (i+1)}</td>
-            <td class="rt-name">${esc(u.username)}${u.id === currentUser.id ? ' <span style="color:var(--text3);font-size:.75rem">(tú)</span>' : ''}</td>
-            <td class="rt-pts">${u.total_points}</td>
-            <td class="rt-exact">${u.exact}</td>
-            <td class="rt-cor">${u.correct}</td>
-            <td class="rt-cor">${u.scored}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>`;
+    <div class="ranking-scroll-inner">
+      <table class="rank-table">
+        <thead><tr>
+          <th class="rt-pos">#</th>
+          <th>Participante</th>
+          <th class="rt-pts">Pts</th>
+          <th class="rt-exact">✓✓</th>
+          <th class="rt-cor">✓</th>
+        </tr></thead>
+        <tbody>
+          ${ranking.map((u, i) => `
+            <tr class="${u.id === currentUser.id ? 'rt-me' : ''}">
+              <td class="rt-pos">${rankMedal(i)}</td>
+              <td class="rt-name">${esc(u.username)}${u.id === currentUser.id ? ' <span class="rt-you">(tú)</span>' : ''}</td>
+              <td class="rt-pts">${u.total_points}</td>
+              <td class="rt-exact">${u.exact}</td>
+              <td class="rt-cor">${u.correct}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
 }
 
 // ── Matches ───────────────────────────────────────────
