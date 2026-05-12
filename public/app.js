@@ -482,7 +482,6 @@ function matchCard(m, pred, phase) {
             value="${esc(String(savedAway))}" placeholder="0"
             oninput="markDirty(${m.id})">
         </div>
-        ${pred ? `<p class="predict-saved-label">Guardado: ${pred.home_score}–${pred.away_score}</p>` : ''}
         <p class="deadline-ok">${deadlineLabel(m.match_date)}</p>
       </div>`;
   } else if (status === 'closed') {
