@@ -1,6 +1,7 @@
 'use strict';
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs   = require('fs');
 
 let db;
 
@@ -9,6 +10,8 @@ function getDb() {
     const dbPath = process.env.NODE_ENV === 'production'
       ? '/app/data/quiniela.db'
       : path.join(__dirname, 'quiniela.db');
+    // Ensure the data directory exists (required if Railway volume is mounted)
+    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
     db = new Database(dbPath);
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
