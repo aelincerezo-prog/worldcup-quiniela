@@ -734,6 +734,19 @@ async function renderPrizes() {
 }
 
 // ═══════════════════════════════════════════════════════
+// ─── Seed real World Cup matches ────────────────────────
+async function seedWorldCupMatches() {
+  if (!confirm('⚠️ Esto borrará TODOS los partidos y pronósticos actuales y los reemplazará con el calendario oficial del Mundial 2026.\n\n¿Continuar?')) return;
+  try {
+    const res = await api('/admin/seed-matches', { method: 'POST' });
+    showToast(`✅ ${res.inserted} partidos cargados correctamente`, 'success');
+    renderAdmin();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
 // ADMIN VIEW
 // ═══════════════════════════════════════════════════════
 async function renderAdmin() {

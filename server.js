@@ -357,6 +357,128 @@ app.delete('/api/admin/matches/:id/result', auth, adminOnly, (req, res) => {
   res.json({ ok: true });
 });
 
+// Seed real World Cup 2026 group stage matches
+app.post('/api/admin/seed-matches', auth, adminOnly, (req, res) => {
+  const db = getDb();
+
+  const MATCHES = [
+    // ── GRUPO A: México, Sudáfrica, Corea del Sur, Chequia ──────────────
+    ['A','México','🇲🇽','Sudáfrica','🇿🇦','2026-06-11T19:00:00.000Z'],
+    ['A','Corea del Sur','🇰🇷','Chequia','🇨🇿','2026-06-12T02:00:00.000Z'],
+    ['A','Chequia','🇨🇿','Sudáfrica','🇿🇦','2026-06-18T16:00:00.000Z'],
+    ['A','México','🇲🇽','Corea del Sur','🇰🇷','2026-06-19T01:00:00.000Z'],
+    ['A','Chequia','🇨🇿','México','🇲🇽','2026-06-25T01:00:00.000Z'],
+    ['A','Sudáfrica','🇿🇦','Corea del Sur','🇰🇷','2026-06-25T01:00:00.000Z'],
+    // ── GRUPO B: Canadá, Bosnia y Herz., Qatar, Suiza ───────────────────
+    ['B','Canadá','🇨🇦','Bosnia y Herz.','🇧🇦','2026-06-12T19:00:00.000Z'],
+    ['B','Qatar','🇶🇦','Suiza','🇨🇭','2026-06-13T19:00:00.000Z'],
+    ['B','Suiza','🇨🇭','Bosnia y Herz.','🇧🇦','2026-06-18T19:00:00.000Z'],
+    ['B','Canadá','🇨🇦','Qatar','🇶🇦','2026-06-18T22:00:00.000Z'],
+    ['B','Suiza','🇨🇭','Canadá','🇨🇦','2026-06-24T19:00:00.000Z'],
+    ['B','Bosnia y Herz.','🇧🇦','Qatar','🇶🇦','2026-06-24T19:00:00.000Z'],
+    // ── GRUPO C: Brasil, Marruecos, Haití, Escocia ──────────────────────
+    ['C','Brasil','🇧🇷','Marruecos','🇲🇦','2026-06-13T22:00:00.000Z'],
+    ['C','Haití','🇭🇹','Escocia','🏴󠁧󠁢󠁳󠁣󠁴󠁿','2026-06-14T01:00:00.000Z'],
+    ['C','Escocia','🏴󠁧󠁢󠁳󠁣󠁴󠁿','Marruecos','🇲🇦','2026-06-19T22:00:00.000Z'],
+    ['C','Brasil','🇧🇷','Haití','🇭🇹','2026-06-20T00:30:00.000Z'],
+    ['C','Escocia','🏴󠁧󠁢󠁳󠁣󠁴󠁿','Brasil','🇧🇷','2026-06-24T22:00:00.000Z'],
+    ['C','Marruecos','🇲🇦','Haití','🇭🇹','2026-06-24T22:00:00.000Z'],
+    // ── GRUPO D: EE.UU., Paraguay, Australia, Türkiye ───────────────────
+    ['D','EE.UU.','🇺🇸','Paraguay','🇵🇾','2026-06-13T01:00:00.000Z'],
+    ['D','Australia','🇦🇺','Türkiye','🇹🇷','2026-06-14T04:00:00.000Z'],
+    ['D','EE.UU.','🇺🇸','Australia','🇦🇺','2026-06-19T19:00:00.000Z'],
+    ['D','Türkiye','🇹🇷','Paraguay','🇵🇾','2026-06-20T03:00:00.000Z'],
+    ['D','Türkiye','🇹🇷','EE.UU.','🇺🇸','2026-06-26T02:00:00.000Z'],
+    ['D','Paraguay','🇵🇾','Australia','🇦🇺','2026-06-26T02:00:00.000Z'],
+    // ── GRUPO E: Alemania, Curazao, Costa de Marfil, Ecuador ────────────
+    ['E','Alemania','🇩🇪','Curazao','🇨🇼','2026-06-14T17:00:00.000Z'],
+    ['E','Costa de Marfil','🇨🇮','Ecuador','🇪🇨','2026-06-14T23:00:00.000Z'],
+    ['E','Alemania','🇩🇪','Costa de Marfil','🇨🇮','2026-06-20T20:00:00.000Z'],
+    ['E','Ecuador','🇪🇨','Curazao','🇨🇼','2026-06-21T00:00:00.000Z'],
+    ['E','Curazao','🇨🇼','Costa de Marfil','🇨🇮','2026-06-25T20:00:00.000Z'],
+    ['E','Ecuador','🇪🇨','Alemania','🇩🇪','2026-06-25T20:00:00.000Z'],
+    // ── GRUPO F: Países Bajos, Japón, Suecia, Túnez ─────────────────────
+    ['F','Países Bajos','🇳🇱','Japón','🇯🇵','2026-06-14T20:00:00.000Z'],
+    ['F','Suecia','🇸🇪','Túnez','🇹🇳','2026-06-15T02:00:00.000Z'],
+    ['F','Países Bajos','🇳🇱','Suecia','🇸🇪','2026-06-20T17:00:00.000Z'],
+    ['F','Túnez','🇹🇳','Japón','🇯🇵','2026-06-21T04:00:00.000Z'],
+    ['F','Japón','🇯🇵','Suecia','🇸🇪','2026-06-25T23:00:00.000Z'],
+    ['F','Túnez','🇹🇳','Países Bajos','🇳🇱','2026-06-25T23:00:00.000Z'],
+    // ── GRUPO G: Bélgica, Egipto, Irán, Nueva Zelanda ───────────────────
+    ['G','Bélgica','🇧🇪','Egipto','🇪🇬','2026-06-15T19:00:00.000Z'],
+    ['G','Irán','🇮🇷','Nueva Zelanda','🇳🇿','2026-06-16T01:00:00.000Z'],
+    ['G','Bélgica','🇧🇪','Irán','🇮🇷','2026-06-21T19:00:00.000Z'],
+    ['G','Nueva Zelanda','🇳🇿','Egipto','🇪🇬','2026-06-22T01:00:00.000Z'],
+    ['G','Egipto','🇪🇬','Irán','🇮🇷','2026-06-27T03:00:00.000Z'],
+    ['G','Nueva Zelanda','🇳🇿','Bélgica','🇧🇪','2026-06-27T03:00:00.000Z'],
+    // ── GRUPO H: España, Cabo Verde, Arabia Saudita, Uruguay ────────────
+    ['H','España','🇪🇸','Cabo Verde','🇨🇻','2026-06-15T16:00:00.000Z'],
+    ['H','Arabia Saudita','🇸🇦','Uruguay','🇺🇾','2026-06-15T22:00:00.000Z'],
+    ['H','España','🇪🇸','Arabia Saudita','🇸🇦','2026-06-21T16:00:00.000Z'],
+    ['H','Uruguay','🇺🇾','Cabo Verde','🇨🇻','2026-06-21T22:00:00.000Z'],
+    ['H','Cabo Verde','🇨🇻','Arabia Saudita','🇸🇦','2026-06-27T00:00:00.000Z'],
+    ['H','Uruguay','🇺🇾','España','🇪🇸','2026-06-27T00:00:00.000Z'],
+    // ── GRUPO I: Francia, Senegal, Irak, Noruega ────────────────────────
+    ['I','Francia','🇫🇷','Senegal','🇸🇳','2026-06-16T19:00:00.000Z'],
+    ['I','Irak','🇮🇶','Noruega','🇳🇴','2026-06-16T22:00:00.000Z'],
+    ['I','Francia','🇫🇷','Irak','🇮🇶','2026-06-22T21:00:00.000Z'],
+    ['I','Noruega','🇳🇴','Senegal','🇸🇳','2026-06-23T00:00:00.000Z'],
+    ['I','Noruega','🇳🇴','Francia','🇫🇷','2026-06-26T19:00:00.000Z'],
+    ['I','Senegal','🇸🇳','Irak','🇮🇶','2026-06-26T19:00:00.000Z'],
+    // ── GRUPO J: Argentina, Argelia, Austria, Jordania ──────────────────
+    ['J','Argentina','🇦🇷','Argelia','🇩🇿','2026-06-17T01:00:00.000Z'],
+    ['J','Austria','🇦🇹','Jordania','🇯🇴','2026-06-17T04:00:00.000Z'],
+    ['J','Argentina','🇦🇷','Austria','🇦🇹','2026-06-22T17:00:00.000Z'],
+    ['J','Jordania','🇯🇴','Argelia','🇩🇿','2026-06-23T03:00:00.000Z'],
+    ['J','Argelia','🇩🇿','Austria','🇦🇹','2026-06-28T02:00:00.000Z'],
+    ['J','Jordania','🇯🇴','Argentina','🇦🇷','2026-06-28T02:00:00.000Z'],
+    // ── GRUPO K: Portugal, RD Congo, Uzbekistán, Colombia ───────────────
+    ['K','Portugal','🇵🇹','RD Congo','🇨🇩','2026-06-17T17:00:00.000Z'],
+    ['K','Uzbekistán','🇺🇿','Colombia','🇨🇴','2026-06-18T02:00:00.000Z'],
+    ['K','Portugal','🇵🇹','Uzbekistán','🇺🇿','2026-06-23T17:00:00.000Z'],
+    ['K','Colombia','🇨🇴','RD Congo','🇨🇩','2026-06-24T02:00:00.000Z'],
+    ['K','Colombia','🇨🇴','Portugal','🇵🇹','2026-06-27T23:30:00.000Z'],
+    ['K','RD Congo','🇨🇩','Uzbekistán','🇺🇿','2026-06-27T23:30:00.000Z'],
+    // ── GRUPO L: Inglaterra, Croacia, Ghana, Panamá ─────────────────────
+    ['L','Inglaterra','🏴󠁧󠁢󠁥󠁮󠁧󠁿','Croacia','🇭🇷','2026-06-17T20:00:00.000Z'],
+    ['L','Ghana','🇬🇭','Panamá','🇵🇦','2026-06-17T23:00:00.000Z'],
+    ['L','Inglaterra','🏴󠁧󠁢󠁥󠁮󠁧󠁿','Ghana','🇬🇭','2026-06-23T20:00:00.000Z'],
+    ['L','Panamá','🇵🇦','Croacia','🇭🇷','2026-06-23T23:00:00.000Z'],
+    ['L','Panamá','🇵🇦','Inglaterra','🏴󠁧󠁢󠁥󠁮󠁧󠁿','2026-06-27T21:00:00.000Z'],
+    ['L','Croacia','🇭🇷','Ghana','🇬🇭','2026-06-27T21:00:00.000Z'],
+  ];
+
+  try {
+    // Delete all predictions and matches, keep phases
+    db.prepare('DELETE FROM predictions').run();
+    db.prepare('DELETE FROM matches').run();
+
+    // Get or create Fase de Grupos phase
+    let phase = db.prepare("SELECT * FROM phases WHERE name = 'group'").get();
+    if (!phase) {
+      db.prepare("INSERT INTO phases (name, display_name, is_active, order_num) VALUES ('group','Fase de Grupos',1,1)").run();
+      phase = db.prepare("SELECT * FROM phases WHERE name = 'group'").get();
+    }
+    const phaseId = phase.id;
+
+    const ins = db.prepare(`
+      INSERT INTO matches (phase_id, group_name, home_team, home_flag, away_team, away_flag, match_date)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+    const insertAll = db.transaction(() => {
+      for (const [g, ht, hf, at, af, date] of MATCHES) {
+        ins.run(phaseId, g, ht, hf, at, af, date);
+      }
+    });
+    insertAll();
+
+    res.json({ ok: true, inserted: MATCHES.length });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Update prizes
 app.put('/api/admin/prizes', auth, adminOnly, (req, res) => {
   const { prizes } = req.body;
