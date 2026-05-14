@@ -476,12 +476,16 @@ function matchCard(m, pred, phase) {
       <div class="match-predict">
         <div class="predict-inputs">
           <input class="score-input" id="h${m.id}" type="number" min="0" max="30"
+            inputmode="numeric" pattern="[0-9]*"
             value="${esc(String(savedHome))}"
-            oninput="markDirty(${m.id})">
+            onkeydown="blockScoreKey(event)"
+            oninput="sanitizeScore(this); markDirty(${m.id})">
           <span class="predict-sep">:</span>
           <input class="score-input" id="a${m.id}" type="number" min="0" max="30"
+            inputmode="numeric" pattern="[0-9]*"
             value="${esc(String(savedAway))}"
-            oninput="markDirty(${m.id})">
+            onkeydown="blockScoreKey(event)"
+            oninput="sanitizeScore(this); markDirty(${m.id})">
         </div>
         <p class="deadline-ok">${deadlineLabel(m.match_date)}</p>
       </div>`;
@@ -564,6 +568,20 @@ async function savePrediction(matchId) {
 }
 
 
+// ─── Score input guards ─────────────────────────────────
+/** Prevent +, -, e, E, . and , from ever being typed in a score box */
+function blockScoreKey(e) {
+  if (['+', '-', 'e', 'E', '.', ','].includes(e.key)) e.preventDefault();
+}
+
+/** Strip anything that isn't a digit and cap at 30 */
+function sanitizeScore(el) {
+  // Replace every non-digit character (type=number may still pass signs through)
+  let v = el.value.replace(/[^0-9]/g, '');
+  if (v !== '' && parseInt(v, 10) > 30) v = '30';
+  el.value = v;
+}
+
 // ─── Dirty / FAB ────────────────────────────────────────
 function markDirty(matchId) {
   dirtyPredictions.add(matchId);
@@ -588,7 +606,7 @@ async function saveAllPredictions() {
   const fab = document.getElementById('save-all-fab');
   if (fab) fab.disabled = true;
 
-  let saved = 0, incomplete = 0, errors = 0;
+  let saved = 0, incomplete = 0, errors = 0, nullClears = 0;
   await Promise.all([...dirtyPredictions].map(async (matchId) => {
     const hEl = document.getElementById(`h${matchId}`);
     const aEl = document.getElementById(`a${matchId}`);
@@ -597,8 +615,18 @@ async function saveAllPredictions() {
     const away = parseInt(aEl.value, 10);
     const homeEmpty = hEl.value.trim() === '';
     const awayEmpty = aEl.value.trim() === '';
-    if (homeEmpty && awayEmpty) return;
-    if (homeEmpty || awayEmpty || isNaN(home) || isNaN(away) || home < 0 || away < 0) { incomplete++; return; }
+    const hasPriorSave = !!myPredictions[matchId];
+
+    // Both boxes empty
+    if (homeEmpty && awayEmpty) {
+      if (hasPriorSave) nullClears++;   // had a saved value → warn user
+      return;                           // no prior save → skip silently
+    }
+    // One box empty or value out of range
+    if (homeEmpty || awayEmpty || isNaN(home) || isNaN(away) || home < 0 || away < 0) {
+      incomplete++;
+      return;
+    }
     try {
       await api('/predictions', { method: 'POST', body: { matchId, homeScore: home, awayScore: away } });
       myPredictions[matchId] = { match_id: matchId, home_score: home, away_score: away };
@@ -610,8 +638,15 @@ async function saveAllPredictions() {
   if (fab) fab.disabled = false;
   updateFab();
 
-  if (incomplete > 0 && saved === 0 && errors === 0)
-    showToast(`Debes ingresar ambos marcadores (local y visitante) para guardar`, 'error');
+  // Priority: show most important feedback first
+  if (nullClears > 0 && saved === 0 && incomplete === 0 && errors === 0)
+    showToast('No puedes dejar en blanco un pronóstico ya guardado. Escribe el nuevo marcador para actualizarlo.', 'error');
+  else if (nullClears > 0 && saved > 0)
+    showToast(`¡${saved} guardado(s)! — ${nullClears} no se puede(n) borrar: escribe el nuevo marcador para actualizarlos.`, 'error');
+  else if (nullClears > 0)
+    showToast(`No puedes dejar en blanco un pronóstico ya guardado. Escribe el nuevo marcador para actualizarlo.`, 'error');
+  else if (incomplete > 0 && saved === 0 && errors === 0)
+    showToast('Debes ingresar ambos marcadores (local y visitante) para guardar', 'error');
   else if (incomplete > 0 && saved > 0)
     showToast(`¡${saved} guardado(s)! — ${incomplete} incompleto(s): ingresa ambos marcadores`, 'error');
   else if (saved > 0 && errors === 0)
