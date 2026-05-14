@@ -7,6 +7,7 @@ const helmet       = require('helmet');
 const rateLimit    = require('express-rate-limit');
 const path         = require('path');
 const { getDb }    = require('./database');
+const { scheduleDailyBackup, runBackup } = require('./backup');
 
 const app    = express();
 const PORT   = process.env.PORT || 3000;
@@ -562,9 +563,22 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Manual backup endpoint (admin only — useful for testing)
+app.post('/api/admin/backup', auth, adminOnly, async (req, res) => {
+  try {
+    await runBackup();
+    res.json({ ok: true, message: 'Backup iniciado (revisa los logs del servidor)' });
+  } catch (e) {
+    console.error('[backup] Error en backup manual:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   getDb(); // ensure DB is initialized
   console.log(`⚽  Quiniela Mundial 2026  →  http://localhost:${PORT}`);
   console.log(`    El primer usuario registrado será administrador.`);
+  // Schedule automatic daily DB backup to GitHub at 03:00 UTC
+  scheduleDailyBackup(3, 0);
 });
