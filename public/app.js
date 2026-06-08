@@ -835,6 +835,17 @@ async function loadResultMatches() {
   const el = document.getElementById('result-matches-list');
   if (!phaseId) { el.innerHTML = ''; return; }
 
+  // ── Preserve unsaved values the admin has already typed ──────────────
+  // (re-renders happen after saving one result, which would wipe sibling rows)
+  const unsaved = {};
+  document.querySelectorAll('#result-matches-list input[id^="rh"]').forEach(inp => {
+    const mid = inp.id.slice(2);                    // "rh42" → "42"
+    const aEl = document.getElementById('ra' + mid);
+    const hVal = inp.value.trim();
+    const aVal = aEl ? aEl.value.trim() : '';
+    if (hVal !== '' || aVal !== '') unsaved[mid] = { h: hVal, a: aVal };
+  });
+
   try {
     const { matches } = await api('/matches');
     const filtered = matches.filter(m => m.phase_id === phaseId);
@@ -851,10 +862,12 @@ async function loadResultMatches() {
         </div>
         <div class="result-inputs">
           <input class="score-input" id="rh${m.id}" type="number" min="0" max="30"
-            value="${m.is_finished ? m.home_score : ''}" placeholder="Local">
+            value="${m.is_finished ? m.home_score : ''}" placeholder="Local"
+            onkeydown="blockScoreKey(event)" oninput="sanitizeScore(this)">
           <span>:</span>
           <input class="score-input" id="ra${m.id}" type="number" min="0" max="30"
-            value="${m.is_finished ? m.away_score : ''}" placeholder="Visita">
+            value="${m.is_finished ? m.away_score : ''}" placeholder="Visita"
+            onkeydown="blockScoreKey(event)" oninput="sanitizeScore(this)">
           <button class="btn btn-primary btn-sm" onclick="setResult(${m.id})">
             ${m.is_finished ? '🔄 Actualizar' : '✅ Registrar'}
           </button>
@@ -864,6 +877,16 @@ async function loadResultMatches() {
           }
         </div>
       </div>`).join('');
+
+    // ── Restore unsaved values for matches that are still without result ──
+    for (const [mid, vals] of Object.entries(unsaved)) {
+      const match = filtered.find(m => String(m.id) === mid);
+      if (!match || match.is_finished) continue;    // skip if just saved to DB
+      const hEl = document.getElementById('rh' + mid);
+      const aEl = document.getElementById('ra' + mid);
+      if (hEl && hEl.value === '') hEl.value = vals.h;
+      if (aEl && aEl.value === '') aEl.value = vals.a;
+    }
   } catch (ex) {
     el.innerHTML = `<p class="loading-text">Error: ${esc(ex.message)}</p>`;
   }
