@@ -209,14 +209,16 @@ async function loadActivePhase() {
     if (hasGroups) {
       const byGroup = {};
       for (const m of phaseMatches) (byGroup[m.group_name || 'Otros'] = byGroup[m.group_name || 'Otros'] || []).push(m);
-      el.innerHTML = Object.entries(byGroup).map(([g, ms]) => `
-        <details class="group-accordion">
-          <summary class="group-accordion-header">
-            <span>Grupo ${g}</span>
-            <span class="group-accordion-meta">${ms.filter(m => m.is_finished).length}/${ms.length} jugados</span>
-          </summary>
-          <div class="matches-grid group-accordion-body">${ms.map(m => homeMatchCard(m, active)).join('')}</div>
-        </details>`).join('');
+      el.innerHTML = Object.entries(byGroup)
+        .sort(([a], [b]) => a.localeCompare(b))   // A, B, C, D … in order
+        .map(([g, ms]) => `
+          <details class="group-accordion">
+            <summary class="group-accordion-header">
+              <span>Grupo ${g}</span>
+              <span class="group-accordion-meta">${ms.filter(m => m.is_finished).length}/${ms.length} jugados</span>
+            </summary>
+            <div class="matches-grid group-accordion-body">${ms.map(m => homeMatchCard(m, active)).join('')}</div>
+          </details>`).join('');
     } else {
       el.innerHTML = `<div class="matches-grid">${phaseMatches.map(m => homeMatchCard(m, active)).join('')}</div>`;
     }
@@ -742,14 +744,16 @@ function renderPredGrid(phaseId) {
       const g = m.group_name || 'Otros';
       (byGroup[g] = byGroup[g] || []).push(m);
     }
-    grid.innerHTML = Object.entries(byGroup).map(([g, ms]) => `
-      <div style="grid-column:1/-1">
-        <div class="group-header">Grupo ${g}</div>
-        <div class="matches-grid" style="margin:0">
-          ${ms.map(m => matchCard(m, myPredictions[m.id], phase)).join('')}
+    grid.innerHTML = Object.entries(byGroup)
+      .sort(([a], [b]) => a.localeCompare(b))   // A, B, C, D … in order
+      .map(([g, ms]) => `
+        <div style="grid-column:1/-1">
+          <div class="group-header">Grupo ${g}</div>
+          <div class="matches-grid" style="margin:0">
+            ${ms.map(m => matchCard(m, myPredictions[m.id], phase)).join('')}
+          </div>
         </div>
-      </div>
-    `).join('');
+      `).join('');
   } else {
     grid.innerHTML = matches.map(m => matchCard(m, myPredictions[m.id], phase)).join('');
   }
@@ -1069,12 +1073,14 @@ setInterval(() => {
     loadRanking();
 }, 120_000);
 
-// Re-render match cards every 60 s so "closed" status updates in real time
+// Re-render match cards every 60 s so "closed" status updates in real time.
+// Skip predictions re-render if user has unsaved inputs — would wipe their data.
 setInterval(() => {
   if (!currentUser) return;
   if (!document.getElementById('view-home').classList.contains('hidden'))
     loadActivePhase();
-  if (!document.getElementById('view-predictions').classList.contains('hidden'))
+  if (!document.getElementById('view-predictions').classList.contains('hidden') &&
+      dirtyPredictions.size === 0)
     renderPredGrid(activePredTab);
 }, 60_000);
 
