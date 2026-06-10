@@ -608,7 +608,8 @@ async function saveAllPredictions() {
   const fab = document.getElementById('save-all-fab');
   if (fab) fab.disabled = true;
 
-  let saved = 0, incomplete = 0, errors = 0, nullClears = 0;
+  let saved = 0, incomplete = 0, errors = 0, nullClears = 0, sessionExpired = false;
+  let lastErrorMsg = 'Error desconocido';
   await Promise.all([...dirtyPredictions].map(async (matchId) => {
     const hEl = document.getElementById(`h${matchId}`);
     const aEl = document.getElementById(`a${matchId}`);
@@ -633,12 +634,30 @@ async function saveAllPredictions() {
       await api('/predictions', { method: 'POST', body: { matchId, homeScore: home, awayScore: away } });
       myPredictions[matchId] = { match_id: matchId, home_score: home, away_score: away };
       saved++;
-    } catch { errors++; }
+    } catch (e) {
+      errors++;
+      // Detect session expiry so we can redirect immediately
+      if (e.message && (e.message.includes('sesión') || e.message.includes('autenticado')))
+        sessionExpired = true;
+      else
+        lastErrorMsg = e.message || lastErrorMsg;
+    }
   }));
 
   dirtyPredictions.clear();
   if (fab) fab.disabled = false;
   updateFab();
+
+  // Session expired → redirect to login before showing anything else
+  if (sessionExpired) {
+    showToast('Tu sesión expiró. Inicia sesión de nuevo para guardar tus pronósticos.', 'error');
+    setTimeout(() => {
+      currentUser = null;
+      showAuth();
+    }, 2500);
+    renderPredGrid(activePredTab);
+    return;
+  }
 
   // Priority: show most important feedback first
   if (nullClears > 0 && saved === 0 && incomplete === 0 && errors === 0)
@@ -646,15 +665,17 @@ async function saveAllPredictions() {
   else if (nullClears > 0 && saved > 0)
     showToast(`¡${saved} guardado(s)! — ${nullClears} no se puede(n) borrar: escribe el nuevo marcador para actualizarlos.`, 'error');
   else if (nullClears > 0)
-    showToast(`No puedes dejar en blanco un pronóstico ya guardado. Escribe el nuevo marcador para actualizarlo.`, 'error');
+    showToast('No puedes dejar en blanco un pronóstico ya guardado. Escribe el nuevo marcador para actualizarlo.', 'error');
   else if (incomplete > 0 && saved === 0 && errors === 0)
     showToast('Debes ingresar ambos marcadores (local y visitante) para guardar', 'error');
   else if (incomplete > 0 && saved > 0)
     showToast(`¡${saved} guardado(s)! — ${incomplete} incompleto(s): ingresa ambos marcadores`, 'error');
+  else if (errors > 0 && saved === 0)
+    showToast(`No se pudo guardar: ${lastErrorMsg}`, 'error');
   else if (saved > 0 && errors === 0)
     showToast(`¡${saved} pronóstico(s) guardado(s)!`, 'success');
   else if (saved > 0)
-    showToast(`${saved} guardado(s), ${errors} con error`, 'error');
+    showToast(`${saved} guardado(s) — ${errors} fallido(s): ${lastErrorMsg}`, 'error');
   else
     showToast('Error al guardar pronósticos', 'error');
 
@@ -664,6 +685,7 @@ async function saveAllPredictions() {
     const target = pendingNavTarget;
     pendingNavTarget = null;
     if (target === '__logout__') doLogout();
+    else if (target?.startsWith('__predtab_')) doSelectPredTab(parseInt(target.replace('__predtab_', '')));
     else doNavigate(target);
   }
 }
@@ -685,6 +707,7 @@ function discardAndNavigate() {
   dirtyPredictions.clear();
   updateFab();
   if (target === '__logout__') doLogout();
+  else if (target?.startsWith('__predtab_')) doSelectPredTab(parseInt(target.replace('__predtab_', '')));
   else doNavigate(target);
 }
 
@@ -721,6 +744,17 @@ async function renderPredictions() {
 }
 
 function selectPredTab(phaseId) {
+  if (phaseId === activePredTab) return;
+  // Warn if user has unsaved predictions on the current tab
+  if (dirtyPredictions.size > 0) {
+    pendingNavTarget = `__predtab_${phaseId}__`;
+    showUnsavedModal();
+    return;
+  }
+  doSelectPredTab(phaseId);
+}
+
+function doSelectPredTab(phaseId) {
   activePredTab = phaseId;
   document.querySelectorAll('#pred-phase-tabs .phase-tab').forEach(b => {
     const id = parseInt(b.getAttribute('onclick').match(/\d+/)?.[0]);
@@ -1074,14 +1108,35 @@ setInterval(() => {
 }, 120_000);
 
 // Re-render match cards every 60 s so "closed" status updates in real time.
-// Skip predictions re-render if user has unsaved inputs — would wipe their data.
+// If user has unsaved inputs, only refresh the deadline labels and badges
+// (not the full grid) to avoid wiping their typed values.
 setInterval(() => {
   if (!currentUser) return;
   if (!document.getElementById('view-home').classList.contains('hidden'))
     loadActivePhase();
-  if (!document.getElementById('view-predictions').classList.contains('hidden') &&
-      dirtyPredictions.size === 0)
-    renderPredGrid(activePredTab);
+  if (!document.getElementById('view-predictions').classList.contains('hidden')) {
+    if (dirtyPredictions.size === 0) {
+      renderPredGrid(activePredTab);
+    } else {
+      // Soft refresh: only update deadline labels and open→closed badge
+      // without touching any input values
+      const phase = allPhases.find(p => p.id === activePredTab);
+      allMatches.filter(m => m.phase_id === activePredTab && !m.is_finished).forEach(m => {
+        const status = matchStatus(m, phase);
+        // Update badge
+        const card = document.getElementById(`h${m.id}`)?.closest('.match-card');
+        if (!card) return;
+        const badge = card.querySelector('.match-badge:last-of-type');
+        if (badge) {
+          badge.className = `match-badge ${badgeClass(status)}`;
+          badge.textContent = badgeLabel(status);
+        }
+        // Update deadline label
+        const dl = card.querySelector('.deadline-ok');
+        if (dl) dl.textContent = deadlineLabel(m.match_date);
+      });
+    }
+  }
 }, 60_000);
 
 // ═══════════════════════════════════════════════════════
