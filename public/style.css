@@ -529,6 +529,36 @@ details[open] > .group-accordion-header::after { transform: rotate(90deg); }
 .group-accordion-meta { font-size: .75rem; font-weight: 500; color: var(--text3); margin-left: auto; margin-right: .75rem; }
 .group-accordion-body { padding: .75rem; }
 
+/* ── ANNOUNCEMENT ────────────────────────────────────── */
+.announcement-card {
+  display: flex;
+  gap: 1.1rem;
+  align-items: flex-start;
+  background: linear-gradient(135deg, rgba(245,158,11,.10), rgba(245,158,11,.04));
+  border: 1px solid rgba(245,158,11,.45);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 0 18px rgba(245,158,11,.18), 0 0 40px rgba(245,158,11,.08);
+}
+.announcement-icon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+  margin-top: .1rem;
+}
+.announcement-body { display: flex; flex-direction: column; gap: .45rem; }
+.announcement-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 0;
+}
+.announcement-text {
+  font-size: .88rem;
+  color: var(--text2);
+  line-height: 1.6;
+  margin: 0;
+}
+
 /* ── RULES ────────────────────────────────────────────── */
 .rules-card {
   background: var(--bg2);
