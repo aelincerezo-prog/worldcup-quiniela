@@ -913,6 +913,37 @@ async function loadResultMatches() {
             ? `<button class="btn btn-ghost btn-sm" onclick="clearResult(${m.id})" title="Borra el marcador y los puntos calculados">🗑️ Limpiar</button>`
             : ''
           }
+          <button class="btn btn-ghost btn-sm" onclick="openEditMatch(${m.id})" title="Editar nombre de equipos o fecha">✏️</button>
+        </div>
+        <div class="edit-match-form hidden" id="edit-form-${m.id}">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Local</label>
+              <input type="text" id="ef-home-${m.id}" value="${esc(m.home_team)}" maxlength="50">
+            </div>
+            <div class="form-group">
+              <label>Bandera local</label>
+              <input type="text" id="ef-hflag-${m.id}" value="${esc(m.home_flag)}" maxlength="10">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Visitante</label>
+              <input type="text" id="ef-away-${m.id}" value="${esc(m.away_team)}" maxlength="50">
+            </div>
+            <div class="form-group">
+              <label>Bandera visitante</label>
+              <input type="text" id="ef-aflag-${m.id}" value="${esc(m.away_flag)}" maxlength="10">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Fecha y hora</label>
+            <input type="datetime-local" id="ef-date-${m.id}" value="${m.match_date ? m.match_date.slice(0,16) : ''}">
+          </div>
+          <div style="display:flex;gap:.5rem;margin-top:.5rem">
+            <button class="btn btn-primary btn-sm" onclick="saveEditMatch(${m.id})">💾 Guardar cambios</button>
+            <button class="btn btn-ghost btn-sm" onclick="closeEditMatch(${m.id})">Cancelar</button>
+          </div>
         </div>
       </div>`).join('');
 
@@ -966,6 +997,35 @@ async function clearResult(matchId) {
     showToast('Resultado limpiado. Puedes volver a registrarlo.', 'success');
     loadResultMatches();
     loadRanking();
+  } catch (ex) {
+    showToast(ex.message, 'error');
+  }
+}
+
+function openEditMatch(matchId) {
+  document.getElementById(`edit-form-${matchId}`)?.classList.remove('hidden');
+}
+
+function closeEditMatch(matchId) {
+  document.getElementById(`edit-form-${matchId}`)?.classList.add('hidden');
+}
+
+async function saveEditMatch(matchId) {
+  const homeTeam = document.getElementById(`ef-home-${matchId}`)?.value.trim();
+  const awayTeam = document.getElementById(`ef-away-${matchId}`)?.value.trim();
+  const homeFlag = document.getElementById(`ef-hflag-${matchId}`)?.value.trim();
+  const awayFlag = document.getElementById(`ef-aflag-${matchId}`)?.value.trim();
+  const matchDate = document.getElementById(`ef-date-${matchId}`)?.value;
+  if (!homeTeam || !awayTeam || !matchDate) {
+    showToast('Nombre de equipos y fecha son obligatorios', 'error'); return;
+  }
+  try {
+    await api(`/admin/matches/${matchId}`, {
+      method: 'PUT',
+      body: { homeTeam, awayTeam, homeFlag, awayFlag, matchDate },
+    });
+    showToast('Partido actualizado correctamente', 'success');
+    loadResultMatches();
   } catch (ex) {
     showToast(ex.message, 'error');
   }
