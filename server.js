@@ -65,6 +65,14 @@ function sanitize(str) {
 
 // datetime-local inputs produce strings without timezone (e.g. "2026-06-28T13:00").
 // Node.js on Railway (UTC) would treat them as UTC; we want Mexico CDT (UTC-5).
+// Converts 2-letter ISO country code to flag emoji ("ZA" → "🇿🇦")
+function toFlagEmoji(str) {
+  const s = String(str || '').trim().toUpperCase();
+  if (/^[A-Z]{2}$/.test(s))
+    return String.fromCodePoint(...[...s].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+  return str;
+}
+
 function normalizeMatchDate(dateStr) {
   const d = sanitize(dateStr);
   if (d && !d.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(d))
@@ -328,7 +336,7 @@ app.post('/api/admin/matches', auth, adminOnly, (req, res) => {
   `).run(
     parseInt(phaseId, 10),
     sanitize(homeTeam), sanitize(awayTeam),
-    sanitize(homeFlag || ''), sanitize(awayFlag || ''),
+    toFlagEmoji(homeFlag || ''), toFlagEmoji(awayFlag || ''),
     normalizeMatchDate(matchDate)
   );
   res.status(201).json({ ok: true, matchId: r.lastInsertRowid });
@@ -346,7 +354,7 @@ app.put('/api/admin/matches/:id', auth, adminOnly, (req, res) => {
     UPDATE matches SET home_team=?, away_team=?, home_flag=?, away_flag=?, match_date=? WHERE id=?
   `).run(
     sanitize(homeTeam), sanitize(awayTeam),
-    sanitize(homeFlag || ''), sanitize(awayFlag || ''),
+    toFlagEmoji(homeFlag || ''), toFlagEmoji(awayFlag || ''),
     normalizeMatchDate(matchDate), match.id
   );
   res.json({ ok: true });
