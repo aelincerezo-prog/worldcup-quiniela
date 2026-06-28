@@ -63,6 +63,22 @@ function sanitize(str) {
   return String(str || '').trim().substring(0, 200);
 }
 
+// datetime-local inputs produce strings without timezone (e.g. "2026-06-28T13:00").
+// Node.js on Railway (UTC) would treat them as UTC; we want Mexico CDT (UTC-5).
+function normalizeMatchDate(dateStr) {
+  const d = sanitize(dateStr);
+  if (d && !d.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(d))
+    return d + ':00-05:00';
+  return d;
+}
+
+function parseMxDate(str) {
+  if (!str) return NaN;
+  if (!str.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(str))
+    return new Date(str + ':00-05:00').getTime();
+  return new Date(str).getTime();
+}
+
 // ── AUTH ─────────────────────────────────────────────────────────────────────
 app.post('/api/auth/register', authLimiter, (req, res) => {
   const { username, password, email } = req.body;
@@ -208,7 +224,7 @@ app.post('/api/predictions', auth, (req, res) => {
   if (!match.phase_active)  return res.status(403).json({ error: 'Esta fase aún no está activa' });
   if (match.is_finished)    return res.status(403).json({ error: 'El partido ya terminó' });
 
-  const matchMs = new Date(match.match_date).getTime();
+  const matchMs = parseMxDate(match.match_date);
   if (isNaN(matchMs))       return res.status(500).json({ error: 'Fecha de partido inválida' });
   if (Date.now() >= matchMs - 10 * 60 * 1000)
     return res.status(403).json({ error: 'Ya no se aceptan pronósticos (cierre 10 min antes)' });
@@ -313,7 +329,7 @@ app.post('/api/admin/matches', auth, adminOnly, (req, res) => {
     parseInt(phaseId, 10),
     sanitize(homeTeam), sanitize(awayTeam),
     sanitize(homeFlag || ''), sanitize(awayFlag || ''),
-    sanitize(matchDate)
+    normalizeMatchDate(matchDate)
   );
   res.status(201).json({ ok: true, matchId: r.lastInsertRowid });
 });
@@ -331,7 +347,7 @@ app.put('/api/admin/matches/:id', auth, adminOnly, (req, res) => {
   `).run(
     sanitize(homeTeam), sanitize(awayTeam),
     sanitize(homeFlag || ''), sanitize(awayFlag || ''),
-    sanitize(matchDate), match.id
+    normalizeMatchDate(matchDate), match.id
   );
   res.json({ ok: true });
 });
