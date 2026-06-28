@@ -191,7 +191,8 @@ async function loadActivePhase() {
     const [{ matches }, { phases }] = await Promise.all([api('/matches'), api('/phases')]);
     allMatches = matches;
     allPhases  = phases;
-    const active = phases.find(p => p.is_active);
+    // Show the most advanced active phase (highest sort_order)
+    const active = phases.filter(p => p.is_active).at(-1);
     const el     = document.getElementById('active-phase-matches');
     const title  = document.getElementById('active-phase-title');
     if (!active) {
