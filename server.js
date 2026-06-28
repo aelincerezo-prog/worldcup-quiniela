@@ -68,14 +68,14 @@ function sanitize(str) {
 function normalizeMatchDate(dateStr) {
   const d = sanitize(dateStr);
   if (d && !d.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(d))
-    return d + ':00-05:00';
+    return d + ':00-06:00';
   return d;
 }
 
 function parseMxDate(str) {
   if (!str) return NaN;
   if (!str.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(str))
-    return new Date(str + ':00-05:00').getTime();
+    return new Date(str + ':00-06:00').getTime();
   return new Date(str).getTime();
 }
 
