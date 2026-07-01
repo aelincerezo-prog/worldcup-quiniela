@@ -191,38 +191,48 @@ async function loadActivePhase() {
     const [{ matches }, { phases }] = await Promise.all([api('/matches'), api('/phases')]);
     allMatches = matches;
     allPhases  = phases;
-    // Show the most advanced active phase (highest sort_order)
-    const active = phases.filter(p => p.is_active).at(-1);
-    const el     = document.getElementById('active-phase-matches');
-    const title  = document.getElementById('active-phase-title');
-    if (!active) {
+
+    const actives = phases.filter(p => p.is_active).sort((a, b) => a.sort_order - b.sort_order);
+    const el      = document.getElementById('active-phase-matches');
+    const title   = document.getElementById('active-phase-title');
+
+    if (!actives.length) {
       title.textContent = '📅 Fase Actual';
       el.innerHTML = '<div class="empty-state"><span class="empty-state-icon">⏳</span>Ninguna fase activa en este momento</div>';
       return;
     }
-    title.textContent = `📅 ${active.display_name}`;
-    const phaseMatches = matches.filter(m => m.phase_id === active.id);
-    if (!phaseMatches.length) {
-      el.innerHTML = '<div class="empty-state"><span class="empty-state-icon">📭</span>No hay partidos en esta fase aún</div>';
-      return;
-    }
-    const hasGroups = phaseMatches.some(m => m.group_name);
-    if (hasGroups) {
-      const byGroup = {};
-      for (const m of phaseMatches) (byGroup[m.group_name || 'Otros'] = byGroup[m.group_name || 'Otros'] || []).push(m);
-      el.innerHTML = Object.entries(byGroup)
-        .sort(([a], [b]) => a.localeCompare(b))   // A, B, C, D … in order
-        .map(([g, ms]) => `
-          <details class="group-accordion">
-            <summary class="group-accordion-header">
-              <span>Grupo ${g}</span>
-              <span class="group-accordion-meta">${ms.filter(m => m.is_finished).length}/${ms.length} jugados</span>
-            </summary>
-            <div class="matches-grid group-accordion-body">${ms.map(m => homeMatchCard(m, active)).join('')}</div>
-          </details>`).join('');
-    } else {
-      el.innerHTML = `<div class="matches-grid">${phaseMatches.map(m => homeMatchCard(m, active)).join('')}</div>`;
-    }
+
+    title.textContent = actives.length === 1 ? `📅 ${actives[0].display_name}` : '📅 Fases Activas';
+
+    el.innerHTML = actives.map(phase => {
+      const phaseMatches = matches.filter(m => m.phase_id === phase.id);
+      const body = !phaseMatches.length
+        ? '<div class="empty-state"><span class="empty-state-icon">📭</span>No hay partidos en esta fase aún</div>'
+        : phase.name === 'group'
+          ? (() => {
+              const byGroup = {};
+              for (const m of phaseMatches) (byGroup[m.group_name || 'Otros'] = byGroup[m.group_name || 'Otros'] || []).push(m);
+              return Object.entries(byGroup)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([g, ms]) => `
+                  <details class="group-accordion">
+                    <summary class="group-accordion-header">
+                      <span>Grupo ${g}</span>
+                      <span class="group-accordion-meta">${ms.filter(m => m.is_finished).length}/${ms.length} jugados</span>
+                    </summary>
+                    <div class="matches-grid group-accordion-body">${ms.map(m => homeMatchCard(m, phase)).join('')}</div>
+                  </details>`).join('');
+            })()
+          : `<div class="matches-grid">${phaseMatches.map(m => homeMatchCard(m, phase)).join('')}</div>`;
+
+      return actives.length === 1
+        ? body
+        : `<div class="phase-block">
+             <h3 class="phase-block-title">${phase.display_name}</h3>
+             ${body}
+           </div>`;
+    }).join('');
+
   } catch {
     document.getElementById('active-phase-matches').innerHTML = '<p class="loading-text">Error cargando partidos</p>';
   }

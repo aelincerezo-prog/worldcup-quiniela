@@ -500,6 +500,14 @@ select option { background: var(--bg3); }
 .prize-desc  { font-size: 1.1rem; font-weight: 600; }
 
 /* ── GROUP ACCORDION ─────────────────────────────────── */
+.phase-block { margin-bottom: 1.5rem; }
+.phase-block-title {
+  font-size: .8rem; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: .75rem; padding-bottom: .4rem;
+  border-bottom: 1px solid var(--border);
+}
+
 .group-accordion {
   background: var(--bg2);
   border: 1px solid var(--border);
