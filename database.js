@@ -77,6 +77,17 @@ function initSchema() {
   if (!cols.includes('email')) {
     db.exec('ALTER TABLE users ADD COLUMN email TEXT');
   }
+
+  // Migration: insert missing "Octavos de Final" phase between Dieciseisavos and Cuartos
+  const hasOctavos = db.prepare("SELECT id FROM phases WHERE name = 'octavos'").get();
+  if (!hasOctavos) {
+    const hasDieciseisavos = db.prepare("SELECT id FROM phases WHERE name = 'round_of_16'").get();
+    if (hasDieciseisavos) {
+      // Shift sort_order of all phases after Dieciseisavos to make room
+      db.prepare("UPDATE phases SET sort_order = sort_order + 1 WHERE sort_order >= 3").run();
+      db.prepare("INSERT INTO phases (name, display_name, is_active, sort_order) VALUES ('octavos','Octavos de Final',0,3)").run();
+    }
+  }
 }
 
 function seedData() {
@@ -90,10 +101,11 @@ function seedData() {
   for (const [name, label, active, order] of [
     ['group',          'Fase de Grupos',        1, 1],
     ['round_of_16',    'Dieciseisavos',          0, 2],
-    ['quarter_finals', 'Cuartos de Final',       0, 3],
-    ['semi_finals',    'Semifinales',            0, 4],
-    ['third_place',    'Tercer Puesto',          0, 5],
-    ['final',          'Final',                  0, 6],
+    ['octavos',        'Octavos de Final',       0, 3],
+    ['quarter_finals', 'Cuartos de Final',       0, 4],
+    ['semi_finals',    'Semifinales',            0, 5],
+    ['third_place',    'Tercer Puesto',          0, 6],
+    ['final',          'Final',                  0, 7],
   ]) {
     phaseIds[name] = insPhase.run(name, label, active, order).lastInsertRowid;
   }
