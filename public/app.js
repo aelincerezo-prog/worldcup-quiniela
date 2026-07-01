@@ -915,6 +915,10 @@ async function loadResultMatches() {
             : ''
           }
           <button class="btn btn-ghost btn-sm" onclick="openEditMatch(${m.id})" title="Editar nombre de equipos o fecha">✏️</button>
+          ${!m.is_finished
+            ? `<button class="btn btn-danger btn-sm" onclick="deleteMatch(${m.id})" title="Eliminar partido">🗑️ Eliminar</button>`
+            : ''
+          }
         </div>
         <div class="edit-match-form hidden" id="edit-form-${m.id}">
           <div class="form-row">
@@ -1026,6 +1030,17 @@ async function saveEditMatch(matchId) {
       body: { homeTeam, awayTeam, homeFlag, awayFlag, matchDate },
     });
     showToast('Partido actualizado correctamente', 'success');
+    loadResultMatches();
+  } catch (ex) {
+    showToast(ex.message, 'error');
+  }
+}
+
+async function deleteMatch(matchId) {
+  if (!confirm('¿Eliminar este partido? También se eliminarán los pronósticos asociados.')) return;
+  try {
+    await api(`/admin/matches/${matchId}`, { method: 'DELETE' });
+    showToast('Partido eliminado', 'success');
     loadResultMatches();
   } catch (ex) {
     showToast(ex.message, 'error');
@@ -1180,19 +1195,33 @@ setInterval(() => {
       renderPredGrid(activePredTab);
     } else {
       // Soft refresh: only update deadline labels and open→closed badge
-      // without touching any input values
+      // Without touching open inputs, but fully replace cards that just closed
       const phase = allPhases.find(p => p.id === activePredTab);
       allMatches.filter(m => m.phase_id === activePredTab && !m.is_finished).forEach(m => {
         const status = matchStatus(m, phase);
-        // Update badge
         const card = document.getElementById(`h${m.id}`)?.closest('.match-card');
         if (!card) return;
+
+        if (status === 'closed' && dirtyPredictions.has(m.id)) {
+          // Match just closed while user had unsaved input — replace score section
+          // so inputs disappear and user can't try to submit a now-rejected prediction
+          dirtyPredictions.delete(m.id);
+          updateFab();
+          const pred = myPredictions[m.id];
+          const scoreSection = card.querySelector('.match-predict');
+          if (scoreSection) {
+            scoreSection.outerHTML = `
+              <p class="match-badge badge-closed" style="text-align:center">🔒 Pronósticos cerrados</p>
+              ${pred ? `<p class="predict-saved-label" style="margin-top:.5rem;text-align:center">Tu pronóstico: ${pred.home_score}–${pred.away_score}</p>` : '<p class="predict-info">Sin pronóstico registrado</p>'}`;
+          }
+        }
+
+        // Update badge and deadline label in all non-finished cards
         const badge = card.querySelector('.match-badge:last-of-type');
         if (badge) {
           badge.className = `match-badge ${badgeClass(status)}`;
           badge.textContent = badgeLabel(status);
         }
-        // Update deadline label
         const dl = card.querySelector('.deadline-ok');
         if (dl) dl.textContent = deadlineLabel(m.match_date);
       });
