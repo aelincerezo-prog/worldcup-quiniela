@@ -329,7 +329,20 @@ app.post('/api/admin/matches', auth, adminOnly, (req, res) => {
   if (!phaseId || !homeTeam || !awayTeam || !matchDate)
     return res.status(400).json({ error: 'Faltan campos obligatorios' });
 
+  const MAX_MATCHES = {
+    group: 72, round_of_16: 16, octavos: 8,
+    quarter_finals: 4, semi_finals: 2, third_place: 1, final: 1,
+  };
+
   const db = getDb();
+  const phase = db.prepare('SELECT * FROM phases WHERE id = ?').get(parseInt(phaseId, 10));
+  if (!phase) return res.status(404).json({ error: 'Fase no encontrada' });
+  const max = MAX_MATCHES[phase.name];
+  if (max != null) {
+    const count = db.prepare('SELECT COUNT(*) as n FROM matches WHERE phase_id = ?').get(phase.id).n;
+    if (count >= max)
+      return res.status(400).json({ error: `La fase "${phase.display_name}" ya tiene el máximo de ${max} partido${max === 1 ? '' : 's'} permitido${max === 1 ? '' : 's'}` });
+  }
   const r  = db.prepare(`
     INSERT INTO matches (phase_id, home_team, away_team, home_flag, away_flag, match_date)
     VALUES (?, ?, ?, ?, ?, ?)
