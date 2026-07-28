@@ -61,9 +61,7 @@
     .podium-slot.p2 .podium-block { height: 55px; background: linear-gradient(180deg, rgba(148,163,184,.2), rgba(148,163,184,.05)); color: var(--silver); }
     .podium-slot.p3 .podium-block { height: 40px; background: linear-gradient(180deg, rgba(205,127,50,.2), rgba(205,127,50,.05)); color: var(--bronze); }
 
-    .bronze-row { display: flex; gap: .75rem; margin-top: .5rem; }
-    .bronze-slot { flex: 1; display: flex; flex-direction: column; align-items: center; gap: .3rem; background: rgba(205,127,50,.07); border: 1px solid rgba(205,127,50,.25); border-radius: 10px; padding: .85rem .5rem; }
-    .bronze-slot .podium-avatar { background: rgba(205,127,50,.12); border-color: var(--bronze); color: var(--bronze); }
+    .fourth-place { display: none; }
 
     .loading-row { color: var(--text2); font-size: .9rem; text-align: center; padding: 1rem 0; }
 
@@ -116,10 +114,8 @@
       <div class="podium">
         <div class="podium-slot p2" id="slot-2"><div class="podium-avatar">2</div><div class="podium-name" id="name-2">—</div><div class="podium-pts" id="pts-2">…</div><div class="podium-block">🥈</div></div>
         <div class="podium-slot p1" id="slot-1"><div class="podium-avatar">1</div><div class="podium-name" id="name-1">—</div><div class="podium-pts" id="pts-1">…</div><div class="podium-block">🥇</div></div>
-      </div>
-      <div class="bronze-row">
-        <div class="bronze-slot" id="slot-3a"><div class="podium-avatar" style="width:42px;height:42px;font-size:1.1rem">3</div><div class="podium-name" id="name-3a">—</div><div class="podium-pts" id="pts-3a">…</div><div style="font-size:1.4rem">🥉</div></div>
-        <div class="bronze-slot" id="slot-3b"><div class="podium-avatar" style="width:42px;height:42px;font-size:1.1rem">3</div><div class="podium-name" id="name-3b">—</div><div class="podium-pts" id="pts-3b">…</div><div style="font-size:1.4rem">🥉</div></div>
+        <div class="podium-slot p3" id="slot-3a"><div class="podium-avatar">3</div><div class="podium-name" id="name-3a">—</div><div class="podium-pts" id="pts-3a">…</div><div class="podium-block">🥉</div></div>
+        <div class="podium-slot p3" id="slot-3b"><div class="podium-avatar">3</div><div class="podium-name" id="name-3b">—</div><div class="podium-pts" id="pts-3b">…</div><div class="podium-block">🥉</div></div>
       </div>
     </div>
   </div>
