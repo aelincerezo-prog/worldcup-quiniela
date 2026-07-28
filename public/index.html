@@ -84,6 +84,9 @@
     .bar-si { background: var(--green); }
     .bar-no { background: #ef4444; }
     .poll-count { font-size: .8rem; color: var(--text2); width: 3rem; text-align: right; }
+    .poll-msg { font-size: .82rem; color: var(--text2); margin-top: .75rem; text-align: center; }
+    .poll-msg a { color: var(--accent); text-decoration: none; }
+    .poll-msg a:hover { text-decoration: underline; }
 
     /* CTA */
     .cta { text-align: center; padding: 1.5rem 0 .5rem; }
@@ -139,6 +142,7 @@
         <div class="poll-count" id="cnt-no">0</div>
       </div>
     </div>
+    <div class="poll-msg" id="poll-msg"></div>
   </div>
 
   <div class="cta">
@@ -188,15 +192,22 @@ async function loadPoll() {
 }
 
 async function vote(v) {
-  try {
-    const data = await fetch('/api/poll', {
-      method: 'POST', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ vote: v }),
-    }).then(r => r.json());
-    updateBars(data.results);
-    setVoteUI(v);
-  } catch {}
+  const msg = document.getElementById('poll-msg');
+  msg.textContent = '';
+  const res = await fetch('/api/poll', {
+    method: 'POST', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ vote: v }),
+  });
+  if (res.status === 401) {
+    msg.innerHTML = '🔒 Inicia sesión para votar — <a href="/game">Entrar al Reto del Día</a>';
+    return;
+  }
+  if (!res.ok) { msg.textContent = 'Error al registrar voto. Intenta de nuevo.'; return; }
+  const data = await res.json();
+  updateBars(data.results);
+  setVoteUI(v);
+  msg.textContent = '✅ Voto registrado';
 }
 
 loadRanking();
