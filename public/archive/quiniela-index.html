@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚽ Quiniela Mundial 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══════════════════════  AUTH SCREEN  ════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-wrap">
+    <div class="auth-logo">
+      <span class="auth-logo-icon">⚽</span>
+      <div>
+        <div class="auth-logo-title">Quiniela Mundial</div>
+        <div class="auth-logo-sub">FIFA World Cup 2026</div>
+      </div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="tab-btn active" id="tab-login"    onclick="switchAuthTab('login')">Iniciar Sesión</button>
+      <button class="tab-btn"        id="tab-register" onclick="switchAuthTab('register')">Registrarse</button>
+    </div>
+
+    <!-- Login -->
+    <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="l-user">Usuario</label>
+        <input id="l-user" type="text" placeholder="Tu nombre de usuario" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label for="l-pass">Contraseña</label>
+        <input id="l-pass" type="password" placeholder="Tu contraseña" autocomplete="current-password" required>
+      </div>
+      <div id="login-err" class="form-error hidden"></div>
+      <button type="submit" class="btn btn-primary btn-full" id="login-btn">Iniciar Sesión</button>
+      <p class="auth-note" style="text-align:center;margin-top:.75rem;">
+        <a href="#" onclick="showForgotMsg(event)" style="color:var(--accent);font-size:.85rem;">¿Olvidaste tu contraseña?</a>
+      </p>
+    </form>
+
+    <!-- Register -->
+    <form id="reg-form" class="auth-form hidden" onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label for="r-user">Usuario</label>
+        <input id="r-user" type="text" placeholder="Elige un nombre (3–30 chars)" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label for="r-email">Correo electrónico</label>
+        <input id="r-email" type="email" placeholder="tu@correo.com" autocomplete="email" required>
+      </div>
+      <div class="form-group">
+        <label for="r-pass">Contraseña</label>
+        <input id="r-pass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required>
+      </div>
+      <div class="form-group">
+        <label for="r-conf">Confirmar Contraseña</label>
+        <input id="r-conf" type="password" placeholder="Repite tu contraseña" autocomplete="new-password" required>
+      </div>
+      <div id="reg-err" class="form-error hidden"></div>
+      <button type="submit" class="btn btn-primary btn-full" id="reg-btn">Crear Cuenta</button>
+      <p class="auth-note">⚡ El primer usuario registrado será administrador</p>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════════  MAIN APP  ═══════════════════════════════════ -->
+<div id="app" class="hidden">
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand" onclick="navigate('home')">⚽ <span>Quiniela 2026</span></div>
+    <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menú">☰</button>
+    <div class="nav-links" id="nav-links">
+      <a class="nav-link active" data-view="home"        onclick="navigate('home')">🏠 Inicio</a>
+      <a class="nav-link"       data-view="predictions"  onclick="navigate('predictions')">📋 Mis Pronósticos</a>
+      <a class="nav-link"       data-view="prizes"       onclick="navigate('prizes')">🏆 Premios</a>
+      <a class="nav-link hidden" data-view="admin" id="admin-nav" onclick="navigate('admin')">⚙️ Admin</a>
+      <a class="nav-link" data-view="profile" onclick="navigate('profile')">👤 Mi Perfil</a>
+    </div>
+    <div class="nav-user">
+      <span class="nav-username" id="nav-username"></span>
+      <button class="btn btn-sm btn-ghost" onclick="handleLogout()">Salir</button>
+    </div>
+  </nav>
+
+  <!-- Views -->
+  <main class="main">
+
+    <!-- ── HOME ─────────────────────────────────────────────────────── -->
+    <div id="view-home" class="view">
+
+      <section class="section">
+        <h2 class="section-title">📖 Reglas de Juego</h2>
+        <div class="rules-card">
+          <div class="rule-item">
+            <span class="rule-pts pts-3">+3 pts</span>
+            <div><strong>Marcador exacto</strong> — Aciertas el resultado exacto del partido</div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-pts pts-1">+1 pt</span>
+            <div><strong>Resultado correcto</strong> — Aciertas quién gana o si hay empate, pero no el marcador exacto</div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-pts pts-0">0 pts</span>
+            <div><strong>Pronóstico fallido</strong> — El resultado que pronosticaste no ocurrió</div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">⏰</span>
+            <div><strong>Cierre de pronósticos</strong> — Los pronósticos se cierran <strong>10 minutos antes</strong> del inicio de cada partido</div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">📋</span>
+            <div><strong>Ingresar pronósticos</strong> — Ve a <em>Mis Pronósticos</em> para registrar o editar tus predicciones mientras estén abiertas</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ANNOUNCEMENT ── edita el texto aquí cuando quieras ── -->
+      <section class="section">
+        <div class="announcement-card">
+          <div class="announcement-icon">📣</div>
+          <div class="announcement-body">
+            <p class="announcement-title">¡Bienvenidos a la recta final! Muchas gracias a todos los que se animaron a participar. Espero se hayan divertido durante todo el evento</p>
+            <p class="announcement-text">Todos los partidos están disponibles para pronósticos. Recuerda: en caso de penales, el pronóstico se basa en el marcador al final del tiempo reglamentario y prórroga — los penales no cuentan. ¡Mucha suerte a todos! ⚽</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">📊 Ranking</h2>
+          <button class="btn btn-sm btn-ghost" onclick="loadRanking()">↺ Actualizar</button>
+        </div>
+        <div id="my-rank-card" class="my-rank-card skeleton-card" style="min-height:72px"></div>
+        <div id="full-ranking" class="ranking-scroll"></div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title" id="active-phase-title">📅 Fase Actual</h2>
+        <div id="active-phase-matches"></div>
+      </section>
+
+    </div><!-- /view-home -->
+
+    <!-- ── MY PREDICTIONS ────────────────────────────────────────────── -->
+    <div id="view-predictions" class="view hidden">
+      <section class="section">
+        <h2 class="section-title">📋 Mis Pronósticos</h2>
+        <div id="pred-phase-tabs" class="phase-tabs"></div>
+        <div id="pred-grid" class="matches-grid"></div>
+      </section>
+    </div>
+
+    <!-- ── PRIZES ────────────────────────────────────────────────────── -->
+    <div id="view-prizes" class="view hidden">
+      <section class="section prizes-section">
+        <h2 class="section-title">🏆 Premios</h2>
+        <p class="prizes-sub">Premio para los mejores pronosticadores al finalizar el Mundial</p>
+        <div id="prizes-list" class="prizes-grid"></div>
+      </section>
+    </div>
+
+    <!-- ── ADMIN ─────────────────────────────────────────────────────── -->
+    <div id="view-admin" class="view hidden">
+      <section class="section">
+        <h2 class="section-title">⚙️ Panel de Administración</h2>
+
+        <!-- Phases -->
+        <div class="admin-card">
+          <h3 class="admin-card-title">🔄 Gestión de Fases</h3>
+          <div id="admin-phases"></div>
+        </div>
+
+        <!-- Results -->
+        <div class="admin-card">
+          <h3 class="admin-card-title">⚽ Registrar Resultado de Partido</h3>
+          <div class="form-group">
+            <label>Fase</label>
+            <select id="result-phase-select" onchange="loadResultMatches()">
+              <option value="">— Selecciona una fase —</option>
+            </select>
+          </div>
+          <div id="result-matches-list"></div>
+        </div>
+
+        <!-- Add match -->
+        <div class="admin-card">
+          <h3 class="admin-card-title">➕ Añadir Partido (Fase eliminatoria)</h3>
+          <form id="add-match-form" onsubmit="handleAddMatch(event)">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Fase</label>
+                <select id="am-phase" required>
+                  <option value="">Seleccionar...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Fecha y hora</label>
+                <input type="datetime-local" id="am-date" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Equipo Local</label>
+                <input type="text" id="am-home" placeholder="Ej: Argentina" required maxlength="50">
+              </div>
+              <div class="form-group">
+                <label>Bandera Local</label>
+                <input type="text" id="am-home-flag" placeholder="🇦🇷" maxlength="10">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Equipo Visitante</label>
+                <input type="text" id="am-away" placeholder="Ej: Brasil" required maxlength="50">
+              </div>
+              <div class="form-group">
+                <label>Bandera Visitante</label>
+                <input type="text" id="am-away-flag" placeholder="🇧🇷" maxlength="10">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Añadir Partido</button>
+          </form>
+        </div>
+
+        <!-- Prizes -->
+        <div class="admin-card">
+          <h3 class="admin-card-title">🏆 Editar Premios</h3>
+          <form id="prizes-form" onsubmit="handleUpdatePrizes(event)">
+            <div class="form-group">
+              <label>🥇 1er Lugar</label>
+              <input type="text" id="prize-1" maxlength="200" placeholder="Ej: $500 MXN o un fin de semana en Cancún">
+            </div>
+            <div class="form-group">
+              <label>🥈 2do Lugar</label>
+              <input type="text" id="prize-2" maxlength="200" placeholder="Ej: $300 MXN">
+            </div>
+            <div class="form-group">
+              <label>🥉 3er Lugar (empate A)</label>
+              <input type="text" id="prize-3" maxlength="200" placeholder="Ej: $200 MXN">
+            </div>
+            <div class="form-group">
+              <label>🥉 3er Lugar (empate B)</label>
+              <input type="text" id="prize-4" maxlength="200" placeholder="Ej: $200 MXN">
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar Premios</button>
+          </form>
+        </div>
+
+        <!-- Users -->
+        <div class="admin-card">
+          <h3 class="admin-card-title">👥 Usuarios Registrados</h3>
+          <div id="admin-users"></div>
+        </div>
+
+      </section>
+    </div><!-- /view-admin -->
+
+    <!-- ── PROFILE ──────────────────────────────────────────────────────── -->
+    <div id="view-profile" class="view hidden">
+      <section class="section">
+        <h2 class="section-title">👤 Mi Perfil</h2>
+
+        <!-- Edit email -->
+        <div class="admin-card">
+          <h3 class="admin-card-title">✉️ Correo Electrónico</h3>
+          <form id="profile-form" onsubmit="handleUpdateProfile(event)">
+            <div class="form-group">
+              <label for="p-email">Correo electrónico</label>
+              <input id="p-email" type="email" placeholder="tu@correo.com" autocomplete="email">
+            </div>
+            <div id="profile-err" class="form-error hidden"></div>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </form>
+        </div>
+
+        <!-- Change password -->
+        <div class="admin-card">
+          <h3 class="admin-card-title">🔒 Cambiar Contraseña</h3>
+          <form id="chpwd-form" onsubmit="handleChangePassword(event)">
+            <div class="form-group">
+              <label for="cp-current">Contraseña actual</label>
+              <input id="cp-current" type="password" placeholder="Tu contraseña actual" autocomplete="current-password" required>
+            </div>
+            <div class="form-group">
+              <label for="cp-new">Nueva contraseña</label>
+              <input id="cp-new" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required>
+            </div>
+            <div class="form-group">
+              <label for="cp-conf">Confirmar nueva contraseña</label>
+              <input id="cp-conf" type="password" placeholder="Repite la nueva contraseña" autocomplete="new-password" required>
+            </div>
+            <div id="chpwd-err" class="form-error hidden"></div>
+            <button type="submit" class="btn btn-primary">Cambiar Contraseña</button>
+          </form>
+        </div>
+
+      </section>
+    </div><!-- /view-profile -->
+
+  </main>
+</div><!-- /app -->
+
+<!-- Toast -->
+<div id="toast" class="toast hidden" role="alert"></div>
+
+<!-- Floating save-all button (predictions) -->
+<button id="save-all-fab" class="save-all-fab hidden" onclick="saveAllPredictions()">
+  💾 <span id="fab-label">Guardar</span>
+</button>
+
+<!-- Unsaved changes modal -->
+<div id="unsaved-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <p class="modal-title">⚠️ Cambios sin guardar</p>
+    <p class="modal-body">Tienes pronósticos sin guardar. Si continúas, se perderán.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="discardAndNavigate()">Salir sin guardar</button>
+      <button class="btn btn-primary" onclick="closeUnsavedModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div id="page-loader" class="page-loader">
+  <div class="loader-ball">⚽</div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

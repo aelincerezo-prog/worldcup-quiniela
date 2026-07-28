@@ -595,6 +595,87 @@ app.post('/api/setup', async (req, res) => {
   res.json({ ok: true, message: `Admin "${username}" creado. Elimina SETUP_TOKEN de Railway ahora.` });
 });
 
+// ── GAME ──────────────────────────────────────────────────────────────────────
+
+app.get('/api/game/today', auth, (req, res) => {
+  const db = getDb();
+  const count = db.prepare('SELECT COUNT(*) as n FROM questions').get().n;
+  if (!count) return res.status(404).json({ error: 'No hay preguntas disponibles' });
+  const dayIndex = Math.floor(Date.now() / 86400000);
+  const q = db.prepare('SELECT id, prompt, type, difficulty FROM questions ORDER BY id LIMIT 1 OFFSET ?').get(dayIndex % count);
+  const today = new Date().toISOString().slice(0, 10);
+  const answered = db.prepare('SELECT submitted_answer, correct, points FROM game_answers WHERE user_id = ? AND answer_date = ?').get(req.user.id, today);
+  if (answered) {
+    const full = db.prepare('SELECT answer, explanation FROM questions WHERE id = ?').get(q.id);
+    return res.json({ question: q, answered: { ...answered, correctAnswer: full.answer, explanation: full.explanation } });
+  }
+  res.json({ question: q, answered: null });
+});
+
+app.post('/api/game/answer', auth, (req, res) => {
+  const { questionId, answer } = req.body;
+  if (!questionId || answer == null) return res.status(400).json({ error: 'Faltan datos' });
+  const db = getDb();
+  const question = db.prepare('SELECT * FROM questions WHERE id = ?').get(parseInt(questionId, 10));
+  if (!question) return res.status(404).json({ error: 'Pregunta no encontrada' });
+  const today = new Date().toISOString().slice(0, 10);
+  const existing = db.prepare('SELECT * FROM game_answers WHERE user_id = ? AND answer_date = ?').get(req.user.id, today);
+  if (existing) return res.status(409).json({ error: 'Ya respondiste hoy' });
+  const submitted = String(answer).trim().toUpperCase();
+  const correct = submitted === String(question.answer).trim().toUpperCase();
+  const points = correct ? (question.difficulty === 'hard' ? 3 : 1) : 0;
+  db.prepare('INSERT INTO game_answers (user_id, question_id, answer_date, submitted_answer, correct, points) VALUES (?,?,?,?,?,?)').run(req.user.id, question.id, today, String(answer).trim(), correct ? 1 : 0, points);
+  res.json({ correct, points, correctAnswer: question.answer, explanation: question.explanation });
+});
+
+app.get('/api/game/scores', auth, (req, res) => {
+  const db = getDb();
+  const rows = db.prepare(`
+    SELECT u.username,
+           COALESCE(SUM(ga.points), 0)                        AS total_points,
+           COUNT(CASE WHEN ga.correct = 1 THEN 1 END)         AS correct_count,
+           COUNT(ga.id)                                        AS total_answered
+    FROM users u
+    LEFT JOIN game_answers ga ON u.id = ga.user_id
+    GROUP BY u.id
+    HAVING total_answered > 0
+    ORDER BY total_points DESC, correct_count DESC
+  `).all();
+  res.json({ scores: rows });
+});
+
+// ── POLL ──────────────────────────────────────────────────────────────────────
+
+app.get('/api/poll', (req, res) => {
+  const db = getDb();
+  const results = db.prepare('SELECT vote, COUNT(*) as count FROM poll_votes GROUP BY vote').all();
+  let userVote = null;
+  try {
+    const token = req.cookies[COOKIE];
+    if (token) {
+      const u = jwt.verify(token, SECRET);
+      const uv = db.prepare('SELECT vote FROM poll_votes WHERE user_id = ?').get(u.id);
+      userVote = uv?.vote || null;
+    }
+  } catch {}
+  res.json({ results, userVote });
+});
+
+app.post('/api/poll', auth, (req, res) => {
+  const { vote } = req.body;
+  if (!['si', 'no'].includes(vote)) return res.status(400).json({ error: 'Voto inválido' });
+  const db = getDb();
+  db.prepare('INSERT INTO poll_votes (user_id, vote) VALUES (?,?) ON CONFLICT(user_id) DO UPDATE SET vote = excluded.vote').run(req.user.id, vote);
+  const results = db.prepare('SELECT vote, COUNT(*) as count FROM poll_votes GROUP BY vote').all();
+  res.json({ ok: true, results });
+});
+
+// ── Static routes ─────────────────────────────────────────────────────────────
+
+app.get('/game', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'game.html'));
+});
+
 // Serve SPA for all non-API routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

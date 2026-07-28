@@ -3,334 +3,220 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>⚽ Quiniela Mundial 2026</title>
+  <title>Quiniela Mundial 2026 — Fin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:     #0f1117;
+      --bg2:    #181c27;
+      --bg3:    #1e2333;
+      --border: rgba(255,255,255,.08);
+      --text:   #f0f2f8;
+      --text2:  #8892aa;
+      --accent: #f59e0b;
+      --gold:   #f59e0b;
+      --silver: #94a3b8;
+      --bronze: #cd7f32;
+      --green:  #22c55e;
+      --radius: 14px;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+
+    /* Header */
+    .hero { text-align: center; padding: 2.5rem 0 2rem; }
+    .hero-trophy { font-size: 4rem; line-height: 1; margin-bottom: 1rem; }
+    .hero-title {
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, #f59e0b, #fbbf24, #f59e0b);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: .75rem;
+    }
+    .hero-sub { color: var(--text2); font-size: 1rem; line-height: 1.6; max-width: 480px; margin: 0 auto; }
+
+    /* Podium */
+    .section { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; }
+    .section-title { font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 1.25rem; }
+
+    .podium { display: flex; align-items: flex-end; justify-content: center; gap: .75rem; margin-bottom: 1.25rem; }
+    .podium-slot { display: flex; flex-direction: column; align-items: center; flex: 1; max-width: 140px; }
+    .podium-avatar { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; margin-bottom: .5rem; border: 3px solid; }
+    .podium-slot.p1 .podium-avatar { background: rgba(245,158,11,.15); border-color: var(--gold); color: var(--gold); }
+    .podium-slot.p2 .podium-avatar { background: rgba(148,163,184,.12); border-color: var(--silver); color: var(--silver); }
+    .podium-slot.p3 .podium-avatar { background: rgba(205,127,50,.12); border-color: var(--bronze); color: var(--bronze); }
+    .podium-name { font-size: .85rem; font-weight: 700; text-align: center; margin-bottom: .25rem; }
+    .podium-pts { font-size: .75rem; color: var(--text2); }
+    .podium-block { width: 100%; border-radius: 8px 8px 0 0; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 900; padding: .5rem 0; }
+    .podium-slot.p1 .podium-block { height: 80px; background: linear-gradient(180deg, rgba(245,158,11,.3), rgba(245,158,11,.1)); color: var(--gold); }
+    .podium-slot.p2 .podium-block { height: 55px; background: linear-gradient(180deg, rgba(148,163,184,.2), rgba(148,163,184,.05)); color: var(--silver); }
+    .podium-slot.p3 .podium-block { height: 40px; background: linear-gradient(180deg, rgba(205,127,50,.2), rgba(205,127,50,.05)); color: var(--bronze); }
+
+    .fourth-place { display: flex; align-items: center; gap: 1rem; padding: .85rem 1rem; background: var(--bg3); border-radius: 10px; border: 1px solid var(--border); }
+    .fourth-badge { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.05); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--text2); font-size: .8rem; flex-shrink: 0; }
+    .fourth-info { flex: 1; }
+    .fourth-name { font-weight: 600; font-size: .9rem; }
+    .fourth-pts { font-size: .75rem; color: var(--text2); }
+
+    .loading-row { color: var(--text2); font-size: .9rem; text-align: center; padding: 1rem 0; }
+
+    /* Poll */
+    .poll-question { font-weight: 600; font-size: 1rem; margin-bottom: 1rem; }
+    .poll-buttons { display: flex; gap: .75rem; margin-bottom: 1rem; }
+    .poll-btn {
+      flex: 1; padding: .75rem; border-radius: 10px; border: 2px solid var(--border);
+      background: var(--bg3); color: var(--text); font-size: .95rem; font-weight: 600;
+      cursor: pointer; transition: all .15s;
+    }
+    .poll-btn:hover { border-color: var(--accent); }
+    .poll-btn.selected-si  { border-color: var(--green); background: rgba(34,197,94,.1); color: var(--green); }
+    .poll-btn.selected-no  { border-color: #ef4444;     background: rgba(239,68,68,.1);  color: #ef4444; }
+    .poll-results { display: flex; flex-direction: column; gap: .5rem; }
+    .poll-bar-wrap { display: flex; align-items: center; gap: .75rem; }
+    .poll-label { font-size: .85rem; font-weight: 600; width: 2.5rem; }
+    .poll-bar-bg { flex: 1; height: 8px; background: var(--bg3); border-radius: 99px; overflow: hidden; }
+    .poll-bar { height: 100%; border-radius: 99px; transition: width .4s ease; }
+    .bar-si { background: var(--green); }
+    .bar-no { background: #ef4444; }
+    .poll-count { font-size: .8rem; color: var(--text2); width: 3rem; text-align: right; }
+
+    /* CTA */
+    .cta { text-align: center; padding: 1.5rem 0 .5rem; }
+    .btn-play {
+      display: inline-flex; align-items: center; gap: .6rem;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      color: #000; font-weight: 800; font-size: 1.1rem;
+      padding: 1rem 2.5rem; border-radius: 99px; border: none; cursor: pointer;
+      text-decoration: none; transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 0 30px rgba(245,158,11,.35);
+    }
+    .btn-play:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(245,158,11,.5); }
+    .cta-sub { margin-top: .75rem; color: var(--text2); font-size: .85rem; }
+  </style>
 </head>
 <body>
+<div class="container">
 
-<!-- ═══════════════════════  AUTH SCREEN  ════════════════════════════════ -->
-<div id="auth-screen">
-  <div class="auth-wrap">
-    <div class="auth-logo">
-      <span class="auth-logo-icon">⚽</span>
-      <div>
-        <div class="auth-logo-title">Quiniela Mundial</div>
-        <div class="auth-logo-sub">FIFA World Cup 2026</div>
-      </div>
-    </div>
-
-    <div class="auth-tabs">
-      <button class="tab-btn active" id="tab-login"    onclick="switchAuthTab('login')">Iniciar Sesión</button>
-      <button class="tab-btn"        id="tab-register" onclick="switchAuthTab('register')">Registrarse</button>
-    </div>
-
-    <!-- Login -->
-    <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
-      <div class="form-group">
-        <label for="l-user">Usuario</label>
-        <input id="l-user" type="text" placeholder="Tu nombre de usuario" autocomplete="username" required>
-      </div>
-      <div class="form-group">
-        <label for="l-pass">Contraseña</label>
-        <input id="l-pass" type="password" placeholder="Tu contraseña" autocomplete="current-password" required>
-      </div>
-      <div id="login-err" class="form-error hidden"></div>
-      <button type="submit" class="btn btn-primary btn-full" id="login-btn">Iniciar Sesión</button>
-      <p class="auth-note" style="text-align:center;margin-top:.75rem;">
-        <a href="#" onclick="showForgotMsg(event)" style="color:var(--accent);font-size:.85rem;">¿Olvidaste tu contraseña?</a>
-      </p>
-    </form>
-
-    <!-- Register -->
-    <form id="reg-form" class="auth-form hidden" onsubmit="handleRegister(event)">
-      <div class="form-group">
-        <label for="r-user">Usuario</label>
-        <input id="r-user" type="text" placeholder="Elige un nombre (3–30 chars)" autocomplete="username" required>
-      </div>
-      <div class="form-group">
-        <label for="r-email">Correo electrónico</label>
-        <input id="r-email" type="email" placeholder="tu@correo.com" autocomplete="email" required>
-      </div>
-      <div class="form-group">
-        <label for="r-pass">Contraseña</label>
-        <input id="r-pass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required>
-      </div>
-      <div class="form-group">
-        <label for="r-conf">Confirmar Contraseña</label>
-        <input id="r-conf" type="password" placeholder="Repite tu contraseña" autocomplete="new-password" required>
-      </div>
-      <div id="reg-err" class="form-error hidden"></div>
-      <button type="submit" class="btn btn-primary btn-full" id="reg-btn">Crear Cuenta</button>
-      <p class="auth-note">⚡ El primer usuario registrado será administrador</p>
-    </form>
+  <div class="hero">
+    <div class="hero-trophy">🏆</div>
+    <h1 class="hero-title">¡Felicidades a los ganadores!</h1>
+    <p class="hero-sub">Esperamos que se hayan divertido durante todo el mundial. Fue un torneo increíble — gracias a todos los que participaron.</p>
   </div>
-</div>
 
-<!-- ═══════════════════════  MAIN APP  ═══════════════════════════════════ -->
-<div id="app" class="hidden">
-
-  <!-- Navbar -->
-  <nav class="navbar" id="navbar">
-    <div class="nav-brand" onclick="navigate('home')">⚽ <span>Quiniela 2026</span></div>
-    <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menú">☰</button>
-    <div class="nav-links" id="nav-links">
-      <a class="nav-link active" data-view="home"        onclick="navigate('home')">🏠 Inicio</a>
-      <a class="nav-link"       data-view="predictions"  onclick="navigate('predictions')">📋 Mis Pronósticos</a>
-      <a class="nav-link"       data-view="prizes"       onclick="navigate('prizes')">🏆 Premios</a>
-      <a class="nav-link hidden" data-view="admin" id="admin-nav" onclick="navigate('admin')">⚙️ Admin</a>
-      <a class="nav-link" data-view="profile" onclick="navigate('profile')">👤 Mi Perfil</a>
-    </div>
-    <div class="nav-user">
-      <span class="nav-username" id="nav-username"></span>
-      <button class="btn btn-sm btn-ghost" onclick="handleLogout()">Salir</button>
-    </div>
-  </nav>
-
-  <!-- Views -->
-  <main class="main">
-
-    <!-- ── HOME ─────────────────────────────────────────────────────── -->
-    <div id="view-home" class="view">
-
-      <section class="section">
-        <h2 class="section-title">📖 Reglas de Juego</h2>
-        <div class="rules-card">
-          <div class="rule-item">
-            <span class="rule-pts pts-3">+3 pts</span>
-            <div><strong>Marcador exacto</strong> — Aciertas el resultado exacto del partido</div>
-          </div>
-          <div class="rule-item">
-            <span class="rule-pts pts-1">+1 pt</span>
-            <div><strong>Resultado correcto</strong> — Aciertas quién gana o si hay empate, pero no el marcador exacto</div>
-          </div>
-          <div class="rule-item">
-            <span class="rule-pts pts-0">0 pts</span>
-            <div><strong>Pronóstico fallido</strong> — El resultado que pronosticaste no ocurrió</div>
-          </div>
-          <div class="rule-item">
-            <span class="rule-icon">⏰</span>
-            <div><strong>Cierre de pronósticos</strong> — Los pronósticos se cierran <strong>10 minutos antes</strong> del inicio de cada partido</div>
-          </div>
-          <div class="rule-item">
-            <span class="rule-icon">📋</span>
-            <div><strong>Ingresar pronósticos</strong> — Ve a <em>Mis Pronósticos</em> para registrar o editar tus predicciones mientras estén abiertas</div>
-          </div>
+  <div class="section">
+    <div class="section-title">🥇 Tabla Final</div>
+    <div id="podium-wrap">
+      <div class="podium">
+        <div class="podium-slot p2" id="slot-2"><div class="podium-avatar">2</div><div class="podium-name" id="name-2">—</div><div class="podium-pts" id="pts-2">…</div><div class="podium-block">🥈</div></div>
+        <div class="podium-slot p1" id="slot-1"><div class="podium-avatar">1</div><div class="podium-name" id="name-1">—</div><div class="podium-pts" id="pts-1">…</div><div class="podium-block">🥇</div></div>
+        <div class="podium-slot p3" id="slot-3"><div class="podium-avatar">3</div><div class="podium-name" id="name-3">—</div><div class="podium-pts" id="pts-3">…</div><div class="podium-block">🥉</div></div>
+      </div>
+      <div class="fourth-place" id="slot-4" style="display:none">
+        <div class="fourth-badge">4</div>
+        <div class="fourth-info">
+          <div class="fourth-name" id="name-4">—</div>
+          <div class="fourth-pts" id="pts-4"></div>
         </div>
-      </section>
-
-      <!-- ── ANNOUNCEMENT ── edita el texto aquí cuando quieras ── -->
-      <section class="section">
-        <div class="announcement-card">
-          <div class="announcement-icon">📣</div>
-          <div class="announcement-body">
-            <p class="announcement-title">¡Bienvenidos a la recta final! Muchas gracias a todos los que se animaron a participar. Espero se hayan divertido durante todo el evento</p>
-            <p class="announcement-text">Todos los partidos están disponibles para pronósticos. Recuerda: en caso de penales, el pronóstico se basa en el marcador al final del tiempo reglamentario y prórroga — los penales no cuentan. ¡Mucha suerte a todos! ⚽</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-header">
-          <h2 class="section-title">📊 Ranking</h2>
-          <button class="btn btn-sm btn-ghost" onclick="loadRanking()">↺ Actualizar</button>
-        </div>
-        <div id="my-rank-card" class="my-rank-card skeleton-card" style="min-height:72px"></div>
-        <div id="full-ranking" class="ranking-scroll"></div>
-      </section>
-
-      <section class="section">
-        <h2 class="section-title" id="active-phase-title">📅 Fase Actual</h2>
-        <div id="active-phase-matches"></div>
-      </section>
-
-    </div><!-- /view-home -->
-
-    <!-- ── MY PREDICTIONS ────────────────────────────────────────────── -->
-    <div id="view-predictions" class="view hidden">
-      <section class="section">
-        <h2 class="section-title">📋 Mis Pronósticos</h2>
-        <div id="pred-phase-tabs" class="phase-tabs"></div>
-        <div id="pred-grid" class="matches-grid"></div>
-      </section>
-    </div>
-
-    <!-- ── PRIZES ────────────────────────────────────────────────────── -->
-    <div id="view-prizes" class="view hidden">
-      <section class="section prizes-section">
-        <h2 class="section-title">🏆 Premios</h2>
-        <p class="prizes-sub">Premio para los mejores pronosticadores al finalizar el Mundial</p>
-        <div id="prizes-list" class="prizes-grid"></div>
-      </section>
-    </div>
-
-    <!-- ── ADMIN ─────────────────────────────────────────────────────── -->
-    <div id="view-admin" class="view hidden">
-      <section class="section">
-        <h2 class="section-title">⚙️ Panel de Administración</h2>
-
-        <!-- Phases -->
-        <div class="admin-card">
-          <h3 class="admin-card-title">🔄 Gestión de Fases</h3>
-          <div id="admin-phases"></div>
-        </div>
-
-        <!-- Results -->
-        <div class="admin-card">
-          <h3 class="admin-card-title">⚽ Registrar Resultado de Partido</h3>
-          <div class="form-group">
-            <label>Fase</label>
-            <select id="result-phase-select" onchange="loadResultMatches()">
-              <option value="">— Selecciona una fase —</option>
-            </select>
-          </div>
-          <div id="result-matches-list"></div>
-        </div>
-
-        <!-- Add match -->
-        <div class="admin-card">
-          <h3 class="admin-card-title">➕ Añadir Partido (Fase eliminatoria)</h3>
-          <form id="add-match-form" onsubmit="handleAddMatch(event)">
-            <div class="form-row">
-              <div class="form-group">
-                <label>Fase</label>
-                <select id="am-phase" required>
-                  <option value="">Seleccionar...</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Fecha y hora</label>
-                <input type="datetime-local" id="am-date" required>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Equipo Local</label>
-                <input type="text" id="am-home" placeholder="Ej: Argentina" required maxlength="50">
-              </div>
-              <div class="form-group">
-                <label>Bandera Local</label>
-                <input type="text" id="am-home-flag" placeholder="🇦🇷" maxlength="10">
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Equipo Visitante</label>
-                <input type="text" id="am-away" placeholder="Ej: Brasil" required maxlength="50">
-              </div>
-              <div class="form-group">
-                <label>Bandera Visitante</label>
-                <input type="text" id="am-away-flag" placeholder="🇧🇷" maxlength="10">
-              </div>
-            </div>
-            <button type="submit" class="btn btn-primary">Añadir Partido</button>
-          </form>
-        </div>
-
-        <!-- Prizes -->
-        <div class="admin-card">
-          <h3 class="admin-card-title">🏆 Editar Premios</h3>
-          <form id="prizes-form" onsubmit="handleUpdatePrizes(event)">
-            <div class="form-group">
-              <label>🥇 1er Lugar</label>
-              <input type="text" id="prize-1" maxlength="200" placeholder="Ej: $500 MXN o un fin de semana en Cancún">
-            </div>
-            <div class="form-group">
-              <label>🥈 2do Lugar</label>
-              <input type="text" id="prize-2" maxlength="200" placeholder="Ej: $300 MXN">
-            </div>
-            <div class="form-group">
-              <label>🥉 3er Lugar (empate A)</label>
-              <input type="text" id="prize-3" maxlength="200" placeholder="Ej: $200 MXN">
-            </div>
-            <div class="form-group">
-              <label>🥉 3er Lugar (empate B)</label>
-              <input type="text" id="prize-4" maxlength="200" placeholder="Ej: $200 MXN">
-            </div>
-            <button type="submit" class="btn btn-primary">Guardar Premios</button>
-          </form>
-        </div>
-
-        <!-- Users -->
-        <div class="admin-card">
-          <h3 class="admin-card-title">👥 Usuarios Registrados</h3>
-          <div id="admin-users"></div>
-        </div>
-
-      </section>
-    </div><!-- /view-admin -->
-
-    <!-- ── PROFILE ──────────────────────────────────────────────────────── -->
-    <div id="view-profile" class="view hidden">
-      <section class="section">
-        <h2 class="section-title">👤 Mi Perfil</h2>
-
-        <!-- Edit email -->
-        <div class="admin-card">
-          <h3 class="admin-card-title">✉️ Correo Electrónico</h3>
-          <form id="profile-form" onsubmit="handleUpdateProfile(event)">
-            <div class="form-group">
-              <label for="p-email">Correo electrónico</label>
-              <input id="p-email" type="email" placeholder="tu@correo.com" autocomplete="email">
-            </div>
-            <div id="profile-err" class="form-error hidden"></div>
-            <button type="submit" class="btn btn-primary">Guardar</button>
-          </form>
-        </div>
-
-        <!-- Change password -->
-        <div class="admin-card">
-          <h3 class="admin-card-title">🔒 Cambiar Contraseña</h3>
-          <form id="chpwd-form" onsubmit="handleChangePassword(event)">
-            <div class="form-group">
-              <label for="cp-current">Contraseña actual</label>
-              <input id="cp-current" type="password" placeholder="Tu contraseña actual" autocomplete="current-password" required>
-            </div>
-            <div class="form-group">
-              <label for="cp-new">Nueva contraseña</label>
-              <input id="cp-new" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required>
-            </div>
-            <div class="form-group">
-              <label for="cp-conf">Confirmar nueva contraseña</label>
-              <input id="cp-conf" type="password" placeholder="Repite la nueva contraseña" autocomplete="new-password" required>
-            </div>
-            <div id="chpwd-err" class="form-error hidden"></div>
-            <button type="submit" class="btn btn-primary">Cambiar Contraseña</button>
-          </form>
-        </div>
-
-      </section>
-    </div><!-- /view-profile -->
-
-  </main>
-</div><!-- /app -->
-
-<!-- Toast -->
-<div id="toast" class="toast hidden" role="alert"></div>
-
-<!-- Floating save-all button (predictions) -->
-<button id="save-all-fab" class="save-all-fab hidden" onclick="saveAllPredictions()">
-  💾 <span id="fab-label">Guardar</span>
-</button>
-
-<!-- Unsaved changes modal -->
-<div id="unsaved-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
-  <div class="modal-box">
-    <p class="modal-title">⚠️ Cambios sin guardar</p>
-    <p class="modal-body">Tienes pronósticos sin guardar. Si continúas, se perderán.</p>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="discardAndNavigate()">Salir sin guardar</button>
-      <button class="btn btn-primary" onclick="closeUnsavedModal()">Cancelar</button>
+        <span>🏅</span>
+      </div>
     </div>
   </div>
+
+  <div class="section">
+    <div class="section-title">📣 Encuesta</div>
+    <p class="poll-question">¿Nos vemos en el Mundial Femenil Brasil 2027?</p>
+    <div class="poll-buttons">
+      <button class="poll-btn" id="btn-si" onclick="vote('si')">✅ ¡Sí!</button>
+      <button class="poll-btn" id="btn-no" onclick="vote('no')">❌ No</button>
+    </div>
+    <div class="poll-results">
+      <div class="poll-bar-wrap">
+        <div class="poll-label" style="color:var(--green)">Sí</div>
+        <div class="poll-bar-bg"><div class="poll-bar bar-si" id="bar-si" style="width:0%"></div></div>
+        <div class="poll-count" id="cnt-si">0</div>
+      </div>
+      <div class="poll-bar-wrap">
+        <div class="poll-label" style="color:#ef4444">No</div>
+        <div class="poll-bar-bg"><div class="poll-bar bar-no" id="bar-no" style="width:0%"></div></div>
+        <div class="poll-count" id="cnt-no">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta">
+    <a class="btn-play" href="/game">🧠 Jugar Reto del Día</a>
+    <p class="cta-sub">Una pregunta nueva cada día — ¿qué tan rápido piensas?</p>
+  </div>
+
 </div>
 
-<!-- Loading overlay -->
-<div id="page-loader" class="page-loader">
-  <div class="loader-ball">⚽</div>
-</div>
+<script>
+async function loadRanking() {
+  try {
+    const { ranking } = await fetch('/api/ranking', { credentials: 'include' }).then(r => r.json());
+    const top = ranking.slice(0, 4);
+    const pts = p => `${p.total_points} pt${p.total_points !== 1 ? 's' : ''}`;
+    [1,2,3].forEach(i => {
+      const p = top[i-1];
+      if (p) {
+        document.getElementById(`name-${i}`).textContent = p.username;
+        document.getElementById(`pts-${i}`).textContent = pts(p);
+      }
+    });
+    if (top[3]) {
+      document.getElementById('name-4').textContent = top[3].username;
+      document.getElementById('pts-4').textContent = pts(top[3]);
+      document.getElementById('slot-4').style.display = 'flex';
+    }
+  } catch {}
+}
 
-<script src="app.js"></script>
+function updateBars(results) {
+  const si = results.find(r => r.vote === 'si')?.count || 0;
+  const no = results.find(r => r.vote === 'no')?.count || 0;
+  const total = si + no || 1;
+  document.getElementById('bar-si').style.width = (si/total*100) + '%';
+  document.getElementById('bar-no').style.width = (no/total*100) + '%';
+  document.getElementById('cnt-si').textContent = si;
+  document.getElementById('cnt-no').textContent = no;
+}
+
+function setVoteUI(v) {
+  document.getElementById('btn-si').className = 'poll-btn' + (v === 'si' ? ' selected-si' : '');
+  document.getElementById('btn-no').className = 'poll-btn' + (v === 'no' ? ' selected-no' : '');
+}
+
+async function loadPoll() {
+  try {
+    const data = await fetch('/api/poll', { credentials: 'include' }).then(r => r.json());
+    updateBars(data.results);
+    if (data.userVote) setVoteUI(data.userVote);
+  } catch {}
+}
+
+async function vote(v) {
+  try {
+    const data = await fetch('/api/poll', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vote: v }),
+    }).then(r => r.json());
+    updateBars(data.results);
+    setVoteUI(v);
+  } catch {}
+}
+
+loadRanking();
+loadPoll();
+</script>
 </body>
 </html>
