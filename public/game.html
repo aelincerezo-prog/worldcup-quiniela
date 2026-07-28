@@ -31,7 +31,10 @@
     .btn-sm { padding:.35rem .8rem; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text2); font-size:.8rem; cursor:pointer; }
     .btn-sm:hover { background:var(--bg3); }
 
-    .container { max-width:620px; margin:0 auto; padding:1.5rem 1rem 4rem; }
+    .layout { display:flex; gap:1.5rem; max-width:1100px; margin:0 auto; padding:1.5rem 1rem 4rem; align-items:flex-start; }
+    .sidebar { width:260px; flex-shrink:0; position:sticky; top:1.5rem; }
+    .game-col { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; }
+    .game-col .q-card, .game-col .home-link { width:100%; max-width:520px; }
 
     /* Auth screen */
     #auth-screen { max-width:380px; margin:3rem auto; padding:0 1rem; }
@@ -104,6 +107,10 @@
 
     .home-link { display:block; text-align:center; margin-top:1.5rem; color:var(--text2); font-size:.82rem; text-decoration:none; }
     .home-link:hover { color:var(--text); }
+    @media (max-width:720px) {
+      .layout { flex-direction:column-reverse; }
+      .sidebar { width:100%; position:static; }
+    }
   </style>
 </head>
 <body>
@@ -139,22 +146,29 @@
 
 <!-- Game screen -->
 <div id="game-screen" style="display:none">
-  <div class="container">
-    <div class="q-card" id="q-card">
-      <div class="q-meta">
-        <span class="diff-badge" id="diff-badge"></span>
-        <span class="q-day" id="q-day"></span>
+  <div class="layout">
+
+    <!-- Left: leaderboard -->
+    <div class="sidebar">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;">
+        <div class="section-title">🏆 Ranking</div>
+        <div id="scores-list"></div>
       </div>
-      <div class="q-prompt" id="q-prompt"></div>
-      <div id="answer-area"></div>
     </div>
 
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;">
-      <div class="section-title">🏆 Ranking del juego</div>
-      <div id="scores-list"></div>
+    <!-- Right: game -->
+    <div class="game-col">
+      <div class="q-card" id="q-card">
+        <div class="q-meta">
+          <span class="diff-badge" id="diff-badge"></span>
+          <span class="q-day" id="q-day"></span>
+        </div>
+        <div class="q-prompt" id="q-prompt"></div>
+        <div id="answer-area"></div>
+      </div>
+      <a class="home-link" href="/">← Ver página de ganadores</a>
     </div>
 
-    <a class="home-link" href="/">Ver página de cierre →</a>
   </div>
 </div>
 
