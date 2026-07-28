@@ -254,7 +254,7 @@ app.post('/api/predictions', auth, (req, res) => {
 });
 
 // ── RANKING ───────────────────────────────────────────────────────────────────
-app.get('/api/ranking', auth, (req, res) => {
+app.get('/api/ranking', (req, res) => {
   const db = getDb();
   const rows = db.prepare(`
     SELECT u.id, u.username,
