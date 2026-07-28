@@ -31,6 +31,8 @@ async function handleLogin(e) {
       body: { username: document.getElementById('l-user').value, password: document.getElementById('l-pass').value },
     });
     currentUser = user;
+    const returnTo = new URLSearchParams(location.search).get('return');
+    if (returnTo) { location.href = returnTo; return; }
     showGame();
   } catch (ex) {
     err.textContent = ex.message;

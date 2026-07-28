@@ -200,7 +200,7 @@ async function vote(v) {
     body: JSON.stringify({ vote: v }),
   });
   if (res.status === 401) {
-    msg.innerHTML = '🔒 Inicia sesión para votar — <a href="/game">Entrar al Reto del Día</a>';
+    msg.innerHTML = '🔒 Inicia sesión para votar — <a href="/game?return=/">Iniciar sesión</a>';
     return;
   }
   if (!res.ok) { msg.textContent = 'Error al registrar voto. Intenta de nuevo.'; return; }
